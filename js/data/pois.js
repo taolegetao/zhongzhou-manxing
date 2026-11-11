@@ -6,7 +6,7 @@
  * cover：介绍卡头图，可直接替换为同尺寸图片。
  *
  * 新增建筑时复制一项，改 id / 文案 / 坐标即可；
- * 其它系统会自动读取并生成点击、提示和发现计数。
+ * 发现计数和头图预加载会自动按数组读取，不需要改 UI。
  */
 export const POIS = [
   {
@@ -19,9 +19,9 @@ export const POIS = [
     kicker: '北京中轴线 · 南端起点',
     accent: '#b34834',
     cover: './assets/covers/yongdingmen.jpg',
-    coverPosition: 'center 52%',
-    hitbox: { x: 398, y: 1126, width: 354, height: 202 },
-    aura: { x: 560, y: 1251, rx: 148, ry: 26 },
+    coverPosition: 'center 56%',
+    hitbox: { x: 340, y: 2230, width: 330, height: 230 },
+    aura: { x: 480, y: 2380, rx: 135, ry: 24 },
     tags: ['南端起点', '外城最大城门', '2004 年复建'],
     lead:
       '永定门是北京中轴线的南端起点，寓意“永远安定”。始建于明嘉靖三十二年（1553 年），是老北京外城七门中规模最大的城门。',
@@ -38,27 +38,31 @@ export const POIS = [
     },
   },
   {
-    id: 'zijincheng',
+    id: 'tiantan',
     order: 2,
     no: '02',
-    seal: '中',
-    name: '紫禁城',
-    en: 'The Forbidden City',
-    kicker: '北京中轴线 · 宫城核心',
-    accent: '#a84431',
-    cover: './assets/covers/zijincheng.jpg',
-    coverPosition: 'center 50%',
-    hitbox: { x: 424, y: 527, width: 244, height: 187 },
-    aura: { x: 542, y: 650, rx: 112, ry: 30 },
-    tags: ['中轴核心', '明永乐建成', '前朝后寝'],
+    seal: '天',
+    name: '天坛',
+    en: 'Temple of Heaven',
+    kicker: '北京中轴线 · 祭天圣地',
+    accent: '#2f6172',
+    cover: './assets/covers/tiantan.jpg',
+    coverPosition: 'center 52%',
+    hitbox: { x: 590, y: 2025, width: 150, height: 195 },
+    aura: { x: 660, y: 2160, rx: 75, ry: 20 },
+    tags: ['世界文化遗产', '明永乐始建', '祭天祈谷'],
     lead:
-      '紫禁城是北京中轴线的核心，明清两代皇家宫殿，建成于明永乐十八年（1420 年）。占地约 72 万平方米，以中轴线严格对称布局。',
+      '天坛位于北京中轴线东侧，是明清两代皇帝祭天、祈谷的场所，始建于明永乐十八年（1420 年），初名“天地坛”。',
     body:
-      '中轴线上依次排布午门、太和门、三大殿、乾清门、后三宫、御花园与神武门；两侧建筑对称分布，遵循“前朝后寝、左祖右社”的古制。它是世界现存规模最大、保存最完整的古代木构宫殿群，集中体现“以中为尊、中正和谐”的礼制思想。',
+      '明嘉靖九年（1530 年）改称天坛，专用于祭天与祈谷。坛域原占地约 273 公顷，分内、外两坛；内坛以圜丘、祈谷坛为核心，祈年殿、皇穹宇、斋宫、神乐署等建筑沿轴线展开。1998 年列入《世界遗产名录》，是北京中轴线遗产构成要素之一，以“天圆地方”的布局表达古人对天人关系的理解。',
     detail: {
-      type: 'route',
-      title: '中轴序列',
-      items: ['午门', '太和门', '三大殿', '乾清门', '后三宫', '神武门'],
+      type: 'timeline',
+      title: '天坛年表',
+      items: [
+        { year: '1420', label: '始建，初名天地坛' },
+        { year: '1530', label: '改称天坛，专事祭天' },
+        { year: '1998', label: '列入世界遗产名录' },
+      ],
     },
   },
 ];

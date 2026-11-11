@@ -166,7 +166,7 @@ function startGame() {
   input.setEnabled(true);
   ui.hideStart();
   window.setTimeout(() => {
-    ui.toast('沿中轴向北，轻触建筑阅读故事', 2800);
+    ui.toast('沿中轴向南，拜访天坛与永定门', 2800);
   }, 720);
 }
 
@@ -219,7 +219,7 @@ function resetToStart() {
   player.reset();
   camera.snapTo(player.x, player.y + VIEW.lookAheadY);
   input.reset();
-  ui.toast('已回到起点 · 正阳门附近', 2200);
+  ui.toast('已回到起点 · 外金水桥附近', 2200);
 }
 
 function bindTapControls() {

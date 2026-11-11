@@ -86,7 +86,7 @@ button:disabled {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: #ded4bf;
+  background: #f5f0e4;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -307,7 +307,7 @@ button:disabled {
   padding: 7px 12px 9px;
   border: 1px solid rgba(27, 41, 40, 0.09);
   border-radius: 12px;
-  background: rgba(250, 246, 236, 0.82);
+  background: rgba(250, 246, 236, 0.9);
   box-shadow:
     0 6px 18px rgba(24, 36, 32, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.58);

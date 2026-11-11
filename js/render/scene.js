@@ -50,7 +50,7 @@ export class SceneRenderer {
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#ded4bf';
+    ctx.fillStyle = '#f8f5ed';
     ctx.fillRect(0, 0, width, height);
 
     ctx.save();

@@ -1,0 +1,15 @@
+{
+  "name": "zhongzhou-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "中轴漫行 · 北京中轴线数字漫游课程 Demo",
+  "homepage": "https://taolegetao.github.io/zhongzhou-manxing/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taolegetao/zhongzhou-manxing.git"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

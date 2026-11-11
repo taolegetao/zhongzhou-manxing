@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d2a29">
+  <meta name="description" content="中轴漫行：从永定门到紫禁城的北京中轴线数字漫游 Demo。拖动行走，轻触建筑阅读故事。">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>中轴漫行 · 北京中轴线数字漫游</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <main id="app" class="app">
+    <section id="stage" class="stage" aria-label="北京中轴线漫游地图">
+      <canvas id="gameCanvas" class="game-canvas" aria-label="可拖动漫游的地图"></canvas>
+      <div class="scene-vignette" aria-hidden="true"></div>
+      <div class="scene-grain" aria-hidden="true"></div>
+
+      <header class="hud">
+        <div class="brand">
+          <span class="brand-seal" aria-hidden="true">轴</span>
+          <div class="brand-copy">
+            <h1>中轴漫行</h1>
+            <p>BEIJING CENTRAL AXIS</p>
+          </div>
+        </div>
+        <div class="hud-tools">
+          <div id="foundChip" class="found-chip" aria-live="polite" title="已发现的中轴遗产点">
+            <span class="found-pulse" aria-hidden="true"></span>
+            <span class="found-text">发现</span>
+            <strong id="foundCount">0</strong><span id="foundTotal" class="found-total">/ 2</span>
+          </div>
+          <button id="helpBtn" class="icon-btn" type="button" aria-label="查看玩法">?</button>
+        </div>
+      </header>
+
+      <div class="axis-meter" aria-hidden="true">
+        <div class="axis-labels">
+          <span>永定门 · 南</span>
+          <span id="axisPercent">中轴</span>
+          <span>紫禁城 · 北</span>
+        </div>
+        <div class="axis-track">
+          <span id="axisFill" class="axis-fill"></span>
+          <i id="axisPin" class="axis-pin"></i>
+        </div>
+      </div>
+
+      <div id="nearHint" class="near-hint" aria-live="polite" hidden>
+        <span class="near-dot" aria-hidden="true"></span>
+        <span id="nearText">轻触建筑，阅读中轴故事</span>
+      </div>
+
+      <div class="bottom-ui">
+        <div class="joystick-wrap">
+          <div id="joystick" class="joystick" role="button" tabindex="0" aria-label="拖动摇杆，控制人物四方位行走">
+            <span class="joy-arrow joy-up" aria-hidden="true">↑</span>
+            <span class="joy-arrow joy-right" aria-hidden="true">→</span>
+            <span class="joy-arrow joy-down" aria-hidden="true">↓</span>
+            <span class="joy-arrow joy-left" aria-hidden="true">←</span>
+            <span class="joy-cross" aria-hidden="true"></span>
+            <div id="stickKnob" class="stick-knob" aria-hidden="true"></div>
+          </div>
+          <span class="joystick-label">拖动行走</span>
+        </div>
+
+        <div class="bottom-right">
+          <button id="resetBtn" class="round-action" type="button" aria-label="回到起点">
+            <span>归位</span>
+          </button>
+          <p class="tap-tip">轻触建筑<br>阅读故事</p>
+        </div>
+      </div>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <div class="rotate-hint" aria-hidden="true">
+        <div class="rotate-icon">▯</div>
+        <p>竖屏漫游，视野更佳</p>
+        <span>请将手机转回竖向</span>
+      </div>
+    </section>
+
+    <section id="startScreen" class="start-screen" aria-label="开始游戏">
+      <div class="start-wash" aria-hidden="true"></div>
+      <div class="start-layout">
+        <div class="start-topline">
+          <span>北京中轴线</span>
+          <i aria-hidden="true"></i>
+          <span>数字漫游</span>
+        </div>
+
+        <div class="start-main">
+          <div class="start-seal" aria-hidden="true">轴</div>
+          <p class="start-kicker">WALKING THE CENTRAL AXIS</p>
+          <h2 class="start-title"><span>中轴</span><span>漫行</span></h2>
+          <p class="start-lede">从永定门到紫禁城，<br>用脚步丈量一条城的脊梁。</p>
+          <div class="start-route" aria-hidden="true">
+            <span>永定门</span>
+            <i></i>
+            <b>·</b>
+            <i></i>
+            <span>紫禁城</span>
+          </div>
+          <button id="startBtn" class="start-btn" type="button" disabled>
+            <span id="startLabel">正在展开地图</span>
+            <span class="start-arrow" aria-hidden="true">→</span>
+          </button>
+          <p id="startHelp" class="start-help">拖动左下摇杆行走 · 轻触建筑阅读</p>
+        </div>
+
+        <footer class="start-footer">
+          <span>研究生课程作业</span>
+          <i aria-hidden="true"></i>
+          <span>可玩性验证 Demo</span>
+        </footer>
+      </div>
+    </section>
+
+    <div id="sheetLayer" class="sheet-layer" hidden>
+      <div class="sheet-backdrop" data-close-sheet></div>
+      <article id="poiSheet" class="poi-sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+        <div class="sheet-grabber" aria-hidden="true"></div>
+        <button id="sheetClose" class="sheet-close" type="button" aria-label="关闭介绍">×</button>
+
+        <div id="sheetCover" class="sheet-cover">
+          <div class="cover-top-shade" aria-hidden="true"></div>
+          <div class="cover-bottom-shade" aria-hidden="true"></div>
+          <span id="sheetNo" class="cover-no">01 / 02</span>
+          <div class="cover-caption">
+            <span id="sheetKicker">北京中轴线 · 南端起点</span>
+            <h2 id="sheetTitle">永定门</h2>
+            <p id="sheetEn">Yongdingmen Gate</p>
+          </div>
+          <div id="sheetStamp" class="cover-stamp" aria-hidden="true">南</div>
+        </div>
+
+        <div class="sheet-body">
+          <p id="sheetIntro" class="sheet-lead"></p>
+          <div id="sheetTags" class="tag-row"></div>
+          <div id="sheetDetail" class="sheet-detail"></div>
+          <p id="sheetBody" class="sheet-copy"></p>
+          <p class="source-note">内容据课程素材与公开资料整理 · 仅用于课程演示</p>
+        </div>
+
+        <div class="sheet-footer">
+          <button id="sheetDone" class="primary-btn" type="button">
+            <span>继续漫游</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <div id="helpLayer" class="help-layer" hidden>
+      <div class="sheet-backdrop" data-close-help></div>
+      <article class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+        <button id="helpClose" class="sheet-close help-close" type="button" aria-label="关闭玩法说明">×</button>
+        <p class="help-kicker">HOW TO WANDER</p>
+        <h2 id="helpTitle">怎样漫游中轴</h2>
+        <ul class="help-list">
+          <li>
+            <span class="help-index">壹</span>
+            <div><strong>四方位行走</strong><p>拖动左下摇杆，或使用键盘 WASD / 方向键。</p></div>
+          </li>
+          <li>
+            <span class="help-index">贰</span>
+            <div><strong>轻触建筑</strong><p>靠近永定门或紫禁城，轻触建筑即可展开介绍。</p></div>
+          </li>
+          <li>
+            <span class="help-index">叁</span>
+            <div><strong>收集两处遗产点</strong><p>顶部“发现”会记录你读过的建筑，读完两处即完成本次漫游。</p></div>
+          </li>
+        </ul>
+        <button id="helpDone" class="primary-btn" type="button">开始漫游</button>
+      </article>
+    </div>
+  </main>
+
+  <noscript>
+    <p style="color:#fff;padding:24px;font-family:sans-serif">请开启 JavaScript 后重新打开页面。</p>
+  </noscript>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

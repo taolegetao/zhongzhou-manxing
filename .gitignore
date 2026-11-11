@@ -1,0 +1,18 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Local credentials / environment
+.env
+.env.*
+!.env.example
+
+# Temporary captures
+shots/
+qa-tools/

@@ -105,7 +105,7 @@ server.listen(PORT, '0.0.0.0', () => {
   const addresses = getLanAddresses();
   const lines = [
     '',
-    '  中轴漫行 · 本地预览服务已启动',
+    '  中轴寻迹 · 本地预览服务已启动',
     '  ─────────────────────────────',
     `  电脑访问：http://localhost:${PORT}`,
   ];

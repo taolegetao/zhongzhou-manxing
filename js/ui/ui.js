@@ -126,7 +126,7 @@ export class UI {
     this.el.startBtn.disabled = true;
     this.el.startLabel.textContent = '加载未完成';
     this.el.startHelp.textContent = message;
-    console.error('[中轴漫行]', message);
+    console.error('[中轴寻迹]', message);
   }
 
   hideStart() {

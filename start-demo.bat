@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title 中轴漫行 · 本地预览
+title 中轴寻迹 · 本地预览
 cd /d "%~dp0"
 
 where node >nul 2>nul

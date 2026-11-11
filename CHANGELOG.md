@@ -3,6 +3,10 @@
 本项目使用语义化版本：`vMAJOR.MINOR.PATCH`。  
 每次发布在 GitHub 上打 tag / Release，GitHub Pages 会随 `main` 分支自动更新。
 
+## v1.0.2 — 2026-11-11
+
+文档补充：说明部分网络可访问 `github.io` / `api.github.com` 但打不开 `github.com` 主站的情况，便于课堂和后续维护排查。
+
 ## v1.0.1 — 2026-11-11
 
 GitHub Pages 正式上线与线上验收。

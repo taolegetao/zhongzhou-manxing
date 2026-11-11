@@ -3,6 +3,16 @@
 本项目使用语义化版本：`vMAJOR.MINOR.PATCH`。  
 每次发布在 GitHub 上打 tag / Release，GitHub Pages 会随 `main` 分支自动更新。
 
+## v1.0.1 — 2026-11-11
+
+GitHub Pages 正式上线与线上验收。
+
+- 项目迁移为 GitHub Pages 固定地址：`https://taolegetao.github.io/zhongzhou-manxing/`。
+- 二维码与分享海报改为指向 GitHub Pages，不再依赖临时隧道。
+- 增加 GitHub Actions `static-check`，每次 push 自动检查 JS 语法和关键素材。
+- 补充 GitHub 仓库、Pages、版本迭代与回滚说明。
+- 线上移动端复测：加载、摇杆移动、建筑点击均通过，无 404 / 页面异常。
+
 ## v1.0.0 — 2026-11-11
 
 首个可玩性验证版本。

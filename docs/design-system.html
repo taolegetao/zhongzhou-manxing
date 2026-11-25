@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>中轴寻迹 · 设计系统与交互设计</title>
+<style>
+  :root{
+    --paper:#f4eee0; --paper-strong:#fbf7ed; --paper-deep:#e9dfca;
+    --ink:#1b2928; --ink-soft:#3b4b47; --muted:#6f7a73;
+    --red:#b34834; --red-deep:#8e3327; --gold:#c29553; --gold-light:#e2c891; --jade:#5f7b6b;
+    --serif:"STZhongsong","Songti SC","STSong","Noto Serif SC","SimSun",serif;
+    --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#141d1b;color:var(--ink);font-family:var(--sans)}
+  .page{
+    width:210mm;height:297mm;box-sizing:border-box;padding:17mm 17mm 14mm;
+    background:var(--paper-strong);position:relative;overflow:hidden;page-break-after:always;
+    margin:0 auto;
+  }
+  .page:last-child{page-break-after:auto}
+  @media screen{
+    body{padding:24px 0}
+    .page{margin-bottom:22px;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+  }
+  @page{size:A4;margin:0}
+  .grain{
+    position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .axis-line{position:absolute;top:0;bottom:0;left:26mm;width:1px;background:linear-gradient(180deg,transparent,var(--gold) 20%,var(--gold) 80%,transparent);opacity:.38}
+  .folio{position:absolute;left:17mm;right:17mm;bottom:8mm;display:flex;justify-content:space-between;
+    font-size:7pt;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  .folio b{color:var(--red);font-weight:500}
+  .eyebrow{font-size:7pt;letter-spacing:.26em;color:var(--red);font-weight:700;text-transform:uppercase}
+  .kicker{font-size:8pt;letter-spacing:.18em;color:var(--muted)}
+  h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0}
+  h1{font-size:58pt;line-height:1.05;letter-spacing:.04em}
+  h2{font-size:24pt;line-height:1.2;letter-spacing:.05em}
+  h3{font-size:12pt;letter-spacing:.04em}
+  p{font-size:9pt;line-height:1.85;color:var(--ink-soft);margin:0}
+  .lead{font-family:var(--serif);font-size:13pt;line-height:1.9;color:var(--ink)}
+  .small{font-size:7.5pt;line-height:1.7;color:var(--muted)}
+  .rule{height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin:8mm 0 6mm}
+  .row{display:flex;gap:10mm}
+  .col{flex:1}
+  .seal{width:16mm;height:16mm;display:grid;place-items:center;border-radius:2.5mm;
+    color:#fff8e9;background:linear-gradient(145deg,#c45a42,#8e3226);font-family:var(--serif);
+    font-size:21pt;box-shadow:inset 0 0 0 1.2mm rgba(94,28,21,.12)}
+  .cover{background:linear-gradient(135deg,#f7f1e3 0%,#eee2c9 100%)}
+  .cover .axis-line{left:50%;opacity:.25}
+  .cover-copy{position:relative;z-index:2;width:86mm;padding-top:8mm}
+  .cover-title{font-size:70pt;line-height:1.02;letter-spacing:.05em}
+  .cover-sub{font-family:var(--serif);font-size:16pt;letter-spacing:.12em;margin-top:4mm;color:var(--red-deep)}
+  .cover-en{font-size:7pt;letter-spacing:.28em;color:var(--muted);margin-top:3mm}
+  .cover-note{font-size:9pt;line-height:1.9;color:var(--ink-soft);margin-top:11mm;max-width:72mm}
+  .phone{
+    position:absolute;right:17mm;top:30mm;width:61mm;height:132mm;border-radius:8mm;
+    background:#182724;padding:2.2mm;box-shadow:0 14mm 25mm rgba(18,30,26,.28);
+    transform:rotate(1.5deg);z-index:2
+  }
+  .phone img{width:100%;height:100%;object-fit:cover;border-radius:6.2mm;display:block}
+  .cover-meta{position:absolute;left:17mm;bottom:16mm;font-size:7.5pt;letter-spacing:.12em;color:var(--muted)}
+  .cover-meta b{color:var(--red);font-weight:600}
+  .section-no{font-family:var(--serif);font-size:38pt;color:var(--red);opacity:.9;line-height:1}
+  .principle{display:grid;grid-template-columns:9mm 1fr;gap:4mm;margin-top:5mm}
+  .principle .n{font-family:var(--serif);font-size:13pt;color:var(--red)}
+  .principle h3{font-size:11pt;margin-bottom:1.2mm}
+  .principle p{font-size:8.3pt;line-height:1.75}
+  .tag{display:inline-block;padding:1.2mm 2.4mm;border:1px solid rgba(194,149,83,.5);border-radius:1mm;
+    color:#7b5a2e;background:rgba(194,149,83,.08);font-size:7pt;letter-spacing:.04em;margin:1mm 1.2mm 0 0}
+  .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5mm;margin-top:4mm}
+  .swatch{border:1px solid rgba(27,41,40,.08);border-radius:2mm;overflow:hidden;background:#fffdf8}
+  .swatch .chip{height:13mm}
+  .swatch .meta{padding:2.2mm 2.6mm}
+  .swatch .meta b{display:block;font-size:7.4pt;font-weight:600}
+  .swatch .meta span{display:block;font-size:6.5pt;color:var(--muted);margin-top:.6mm;letter-spacing:.04em}
+  table{width:100%;border-collapse:collapse;font-size:7.6pt}
+  th{font-size:6.8pt;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:2.2mm 2mm;border-bottom:1px solid var(--gold)}
+  td{padding:2.2mm 2mm;border-bottom:1px solid rgba(27,41,40,.09);vertical-align:top;color:var(--ink-soft);line-height:1.55}
+  td b{color:var(--ink);font-weight:600}
+  .type-row{display:flex;align-items:baseline;gap:5mm;padding:2.6mm 0;border-bottom:1px solid rgba(27,41,40,.08)}
+  .type-row .sample{flex:0 0 58mm}
+  .type-row .desc{font-size:7pt;color:var(--muted);line-height:1.6}
+  .component-grid{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+  .component-card{border:1px solid rgba(27,41,40,.09);border-radius:3mm;background:#fffdf8;padding:4mm;position:relative}
+  .component-card h3{font-size:10pt;margin-bottom:1mm}
+  .component-card p{font-size:7.4pt;line-height:1.65}
+  .component-card .demo{margin-top:3mm;padding:3mm;border-radius:2mm;background:var(--paper);min-height:15mm;display:flex;align-items:center;justify-content:center;gap:4mm;flex-wrap:wrap}
+  .demo .brand{display:flex;align-items:center;gap:2mm;background:rgba(251,247,237,.95);border:1px solid rgba(27,41,40,.1);border-radius:3mm;padding:1.5mm 2.5mm 1.5mm 1.5mm}
+  .demo .brand .s{width:7mm;height:7mm;border-radius:1.5mm;background:linear-gradient(145deg,#c0543d,#963629);color:#fff8e9;display:grid;place-items:center;font-family:var(--serif);font-size:8pt}
+  .demo .brand .t{font-family:var(--serif);font-size:7.4pt;letter-spacing:.1em;line-height:1.1}
+  .demo .brand .t small{display:block;font-family:var(--sans);font-size:4pt;letter-spacing:.12em;color:var(--muted);margin-top:.6mm}
+  .demo .chip{display:flex;align-items:center;gap:1.4mm;background:rgba(251,247,237,.95);border:1px solid rgba(27,41,40,.1);border-radius:99px;padding:1.4mm 2.4mm;font-size:5.8pt;color:var(--ink-soft)}
+  .demo .chip b{font-family:var(--serif);font-size:9pt;color:var(--red)}
+  .demo .btn{width:7.5mm;height:7.5mm;border-radius:50%;background:rgba(251,247,237,.95);border:1px solid rgba(27,41,40,.1);display:grid;place-items:center;font-family:var(--serif);font-size:7pt;color:var(--ink-soft)}
+  .demo .toast{background:rgba(27,41,40,.94);color:#fbf4e6;border-radius:99px;padding:1.4mm 3mm;font-size:5.8pt;letter-spacing:.04em}
+  .demo .joy{width:17mm;height:17mm;border-radius:50%;background:radial-gradient(circle at 38% 31%,#fffdf7,#e8dcc8);border:1px solid rgba(27,41,40,.1);display:grid;place-items:center}
+  .demo .joy i{display:block;width:7mm;height:7mm;border-radius:50%;background:#1d2b28;box-shadow:inset 0 0 0 .6mm rgba(255,255,255,.18)}
+  .demo .track{width:32mm;height:1px;background:rgba(63,81,73,.25);position:relative}
+  .demo .track i{position:absolute;left:55%;top:-1mm;width:2.4mm;height:2.4mm;border-radius:50%;background:var(--red);border:1px solid #fbf7ed}
+  .demo .tag-small{font-size:5.8pt;border:1px solid rgba(194,149,83,.45);border-radius:1mm;padding:1mm 1.8mm;color:#7b5a2e}
+  .demo .seal-small{width:9mm;height:9mm;border-radius:1.4mm;background:linear-gradient(145deg,#c0563f,#92362a);color:#fff8e9;display:grid;place-items:center;font-family:var(--serif);font-size:9pt;transform:rotate(3deg)}
+  .layers{display:grid;gap:1.8mm;margin-top:4mm}
+  .layer{display:flex;align-items:center;gap:3mm;padding:2.8mm 3mm;border-radius:2mm;background:var(--paper);border-left:2px solid var(--gold)}
+  .layer b{font-size:7.4pt;width:32mm}
+  .layer span{font-size:6.8pt;color:var(--muted);line-height:1.5}
+  .flow{display:flex;align-items:center;gap:1.8mm;flex-wrap:wrap;margin-top:4mm}
+  .flow .node{font-size:7pt;background:var(--paper);border:1px solid rgba(27,41,40,.1);border-radius:2mm;padding:2mm 2.6mm;color:var(--ink-soft)}
+  .flow .node.hot{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .flow .arrow{color:var(--gold);font-size:9pt}
+  .state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4mm;margin-top:3mm}
+  .state-box{border:1px solid rgba(27,41,40,.1);border-radius:2mm;padding:2.6mm 3mm;background:var(--paper)}
+  .state-box b{display:block;font-size:7pt;color:var(--red)}
+  .state-box span{display:block;font-size:6.4pt;color:var(--muted);line-height:1.5;margin-top:.8mm}
+  .feedback td{font-size:7pt}
+  .audit li{font-size:8pt;line-height:1.75;color:var(--ink-soft);margin-bottom:1.2mm}
+  .audit b{color:var(--ink)}
+  .quote{font-family:var(--serif);font-size:13pt;line-height:1.9;color:var(--ink);border-left:2px solid var(--red);padding-left:5mm;margin-top:5mm}
+  .image-frame{border:1px solid rgba(27,41,40,.1);background:var(--paper);padding:2.5mm;border-radius:2.5mm}
+  .image-frame img{display:block;width:100%;border-radius:1.5mm}
+  .caption{font-size:6.5pt;letter-spacing:.08em;color:var(--muted);margin-top:2mm}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm}
+  .note-box{background:var(--paper);border:1px solid rgba(194,149,83,.25);border-radius:2.5mm;padding:4mm 4.5mm}
+  .note-box h3{font-size:9pt;margin-bottom:1.5mm;color:var(--red)}
+  .note-box p{font-size:7.4pt;line-height:1.75}
+  .big-index{font-family:var(--serif);font-size:29pt;color:var(--red);line-height:1}
+  .split-title{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:5mm}
+  .split-title h2{margin-top:2mm}
+  .split-title .tagline{font-size:7pt;color:var(--muted);letter-spacing:.12em;text-align:right;line-height:1.7}
+  .tight p{margin-top:1.5mm}
+  .mt2{margin-top:2mm}.mt4{margin-top:4mm}.mt6{margin-top:6mm}.mt8{margin-top:8mm}
+  .muted{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- 01 COVER -->
+<section class="page cover">
+  <div class="grain"></div><div class="axis-line"></div>
+  <div class="cover-copy">
+    <div class="seal">轴</div>
+    <div class="eyebrow" style="margin-top:12mm">BEIJING CENTRAL AXIS / DESIGN SYSTEM</div>
+    <h1 class="cover-title">中轴<br>寻迹</h1>
+    <div class="cover-sub">纸本中轴 · 轻量文化漫游</div>
+    <div class="cover-en">DESIGN SYSTEM &amp; INTERACTION DESIGN</div>
+    <p class="cover-note">以“纸本中轴”为视觉母题，把一次城市漫游压缩成三分钟的轻量文化探索。走、看、读、收集，让中轴线成为一条可以步行的叙事线。</p>
+    <div style="margin-top:10mm">
+      <span class="tag">纸本</span><span class="tag">中轴</span><span class="tag">博物馆标签</span><span class="tag">轻游戏</span>
+    </div>
+  </div>
+  <div class="phone"><img src="preview-game.jpg" alt="中轴寻迹游戏画面"></div>
+  <div class="cover-meta">移动端 H5 / Canvas 2D　·　v1.1.2　·　研究生课程作业<br><b>永定门 · 天坛</b>　两处遗产点 / 四方位漫游</div>
+  <div class="folio"><span>中轴寻迹 · 设计系统与交互设计</span><span>01 / 07</span></div>
+</section>
+
+<!-- 02 POSITIONING -->
+<section class="page">
+  <div class="grain"></div><div class="axis-line"></div>
+  <div class="split-title">
+    <div><div class="eyebrow">01 / POSITIONING</div><h2>设计定位与原则</h2></div>
+    <div class="tagline">不是闯关<br>而是一次可步行的展览</div>
+  </div>
+  <div class="row">
+    <div class="col" style="flex:1.05">
+      <p class="lead">用一条中轴线，把“看建筑”变成“走到建筑面前”。玩家不需要学习复杂规则，30 秒内理解“拖摇杆、点建筑”。</p>
+      <p class="mt4">产品形态是移动端 H5 文化漫游 Demo；目标不是商业级完整度，而是验证“北京中轴线文化 + 游戏化交互”的初步想法。体验关键词是克制、可读、可探索、文化温度。</p>
+      <div class="rule"></div>
+      <div class="eyebrow">FIVE PRINCIPLES</div>
+      <div class="principle"><div class="n">壹</div><div><h3>以轴为骨</h3><p>地图、镜头、进度、排版都围绕一条垂直中轴线组织。轴线既是地理线，也是视觉骨架。</p></div></div>
+      <div class="principle"><div class="n">贰</div><div><h3>以纸为底</h3><p>纸色作底，墨色承担文字，朱红只做印章式强调，金色只做细线。界面像手账，不像游戏 HUD。</p></div></div>
+      <div class="principle"><div class="n">叁</div><div><h3>一步一景</h3><p>不做整图俯视，用局部镜头制造“走着看”的节奏；人物略偏下方，前方留出探索空间。</p></div></div>
+      <div class="principle"><div class="n">肆</div><div><h3>轻触即读</h3><p>看到建筑、点一下就能读。点击区包含建筑与名称标签，手指容易命中。</p></div></div>
+      <div class="principle"><div class="n">伍</div><div><h3>不打断漫游</h3><p>弹窗是暂停阅读，不是跳出游戏；没有失败、没有倒计时、没有强制下一步。</p></div></div>
+    </div>
+    <div class="col" style="flex:.8">
+      <div class="image-frame"><img src="preview-start.jpg" alt="开始页" style="max-height:170mm;object-fit:cover;object-position:top"></div>
+      <div class="caption">START SCREEN / 品牌印章、宋体大标题、单一开始按钮</div>
+      <div class="note-box mt4">
+        <h3>非目标</h3>
+        <p>不做战斗、排行榜、复杂养成；不做重度 3D 或真实 GIS；不追求商业级内容量。当前聚焦两处遗产点，先验证“走 + 点”的核心体验。</p>
+      </div>
+    </div>
+  </div>
+  <div class="folio"><span>01 / POSITIONING</span><span>02 / 07</span></div>
+</section>
+
+<!-- 03 VISUAL -->
+<section class="page">
+  <div class="grain"></div><div class="axis-line"></div>
+  <div class="split-title">
+    <div><div class="eyebrow">02 / VISUAL LANGUAGE</div><h2>视觉系统</h2></div>
+    <div class="tagline">纸 70% / 墨 20%<br>朱红 6% / 金 3% / 青 1%</div>
+  </div>
+  <div class="row">
+    <div class="col" style="flex:1.1">
+      <div class="eyebrow">COLOR TOKENS</div>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:#f4eee0"></div><div class="meta"><b>Paper</b><span>#F4EEE0 · 纸底</span></div></div>
+        <div class="swatch"><div class="chip" style="background:#fbf7ed"></div><div class="meta"><b>Paper Strong</b><span>#FBF7ED · 卡片</span></div></div>
+        <div class="swatch"><div class="chip" style="background:#1b2928"></div><div class="meta"><b>Ink</b><span>#1B2928 · 墨</span></div></div>
+        <div class="swatch"><div class="chip" style="background:#b34834"></div><div class="meta"><b>Vermilion</b><span>#B34834 · 朱红</span></div></div>
+        <div class="swatch"><div class="chip" style="background:#c29553"></div><div class="meta"><b>Gold</b><span>#C29553 · 金</span></div></div>
+        <div class="swatch"><div class="chip" style="background:#5f7b6b"></div><div class="meta"><b>Jade</b><span>#5F7B6B · 青</span></div></div>
+      </div>
+      <p class="small mt4">朱红与金是“印章式”强调，不能大面积铺开。青色当前保留，可用于侧坛、自然与未来的第二强调色。</p>
+      <div class="rule"></div>
+      <div class="eyebrow">TYPOGRAPHY</div>
+      <div class="type-row"><div class="sample" style="font-family:var(--serif);font-size:30pt">中轴寻迹</div><div class="desc">品牌大标题<br>宋体 / 48–64px</div></div>
+      <div class="type-row"><div class="sample" style="font-family:var(--serif);font-size:15pt">永定门 · 南端起点</div><div class="desc">页面标题 / 卡片导语<br>宋体 / 14.5–33px</div></div>
+      <div class="type-row"><div class="sample" style="font-size:8pt;line-height:1.7;color:var(--ink-soft)">原城楼于 1957 年拆除，2004 年按清代形制原址复建。</div><div class="desc">正文<br>黑体 / 12px / 1.95</div></div>
+      <div class="type-row"><div class="sample" style="font-size:6pt;letter-spacing:.18em;color:var(--red)">YONGDINGMEN GATE / 1553</div><div class="desc">展览式英文小标<br>大写 / 宽字距</div></div>
+      <div class="grid-3 mt6">
+        <div class="note-box"><h3>Spacing</h3><p>4 / 8 / 12 / 16 / 24 / 32<br>当前实现存在 6/10/22 等中间值，下一版收敛到 8pt 体系。</p></div>
+        <div class="note-box"><h3>Radius</h3><p>8 / 12 / 16 / 24 / 999<br>小元素 8，卡片 12–16，抽屉 24，胶囊 999。</p></div>
+        <div class="note-box"><h3>Elevation</h3><p>只用于纸片浮起：<br>0 12px 34px rgba(24,36,32,.16)</p></div>
+      </div>
+    </div>
+    <div class="col" style="flex:.82">
+      <div class="image-frame"><img src="preview-sheet.jpg" alt="天坛介绍卡" style="max-height:155mm;object-fit:cover;object-position:top"></div>
+      <div class="caption">POI SHEET / 头图、编号、朱印、标签、时间线、来源</div>
+      <div class="note-box mt4">
+        <h3>材质与母题</h3>
+        <p>印章 · 中轴线 · 金线 · 纸纹 · 留白。阴影只用于“纸片浮起”，不用发光或霓虹。</p>
+        <div style="margin-top:2.5mm"><span class="tag">印章</span><span class="tag">轴线</span><span class="tag">金线</span><span class="tag">纸纹</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="folio"><span>02 / VISUAL LANGUAGE</span><span>03 / 07</span></div>
+</section>
+
+<!-- 04 COMPONENTS -->
+<section class="page">
+  <div class="grain"></div><div class="axis-line"></div>
+  <div class="split-title">
+    <div><div class="eyebrow">03 / COMPONENTS</div><h2>组件系统</h2></div>
+    <div class="tagline">所有组件都像纸片<br>而不是游戏控件</div>
+  </div>
+  <div class="component-grid">
+    <div class="component-card">
+      <h3>品牌 HUD</h3>
+      <p>品牌印章 + 中文名 + 英文小标。固定在安全区左上，半透明纸片，保证地图仍可见。</p>
+      <div class="demo"><div class="brand"><span class="s">轴</span><span class="t">中轴寻迹<small>BEIJING CENTRAL AXIS</small></span></div></div>
+    </div>
+    <div class="component-card">
+      <h3>发现 Chip</h3>
+      <p>轻量收集反馈。默认深色数字，完成态反色为墨底金字，给一个很短的 bump 动效。</p>
+      <div class="demo"><span class="chip"><span style="width:1.6mm;height:1.6mm;border-radius:50%;background:var(--gold)"></span>发现 <b>0</b> / 2</span><span class="chip" style="background:#1b2928;color:#fbf7ed"><span style="width:1.6mm;height:1.6mm;border-radius:50%;background:var(--gold-light)"></span>发现 <b style="color:var(--gold-light)">2</b> / 2</span></div>
+    </div>
+    <div class="component-card">
+      <h3>中轴进度条</h3>
+      <p>永定门 → 钟鼓楼。2px 细轨道 + 朱红圆点，数值只做辅助，不承担任务目标。</p>
+      <div class="demo" style="display:block"><div style="font-size:5.4pt;display:flex;justify-content:space-between;color:var(--muted);margin-bottom:2mm"><span>永定门 · 南</span><span style="color:var(--red)">中轴 33%</span><span>钟鼓楼 · 北</span></div><div class="track"><i></i></div></div>
+    </div>
+    <div class="component-card">
+      <h3>摇杆与归位</h3>
+      <p>114px 纸面圆盘 + 46px 墨色摇杆头；右侧 47px “归位”。左右手分区，互不遮挡。</p>
+      <div class="demo"><div class="joy"><i></i></div><span class="btn">归位</span></div>
+    </div>
+    <div class="component-card">
+      <h3>靠近提示</h3>
+      <p>进入 340 世界像素范围时出现：深墨胶囊 + 金点 + “轻触「天坛」”。不抢中心画面。</p>
+      <div class="demo"><span class="toast">● 轻触「天坛」· 阅读中轴故事</span></div>
+    </div>
+    <div class="component-card">
+      <h3>介绍卡</h3>
+      <p>底部抽屉，最大 91dvh；头图 2:1，正文可滚动，底部 CTA 固定。打开时暂停输入。</p>
+      <div class="demo" style="align-items:stretch"><div style="flex:1;background:#f0e7d5;border-radius:1.5mm;padding:2.5mm;font-size:5.6pt;color:var(--muted)">编号 01/02<br><span style="font-family:var(--serif);font-size:10pt;color:var(--ink)">永定门</span><br>南端起点 · 1553</div><span class="seal-small">南</span></div>
+    </div>
+    <div class="component-card">
+      <h3>标签与年表</h3>
+      <p>3 个标签概括关键词；时间线固定三列。年份用宋体朱红，说明用灰墨小字。</p>
+      <div class="demo"><span class="tag-small">南端起点</span><span class="tag-small">外城最大城门</span><span class="tag-small">2004 复建</span></div>
+    </div>
+    <div class="component-card">
+      <h3>Toast</h3>
+      <p>只用于“完成/归位/开始”的短反馈。不阻挡输入，2–3 秒自动消失。</p>
+      <div class="demo"><span class="toast">中轴遗产点已全部收录 · 本次漫游完成</span></div>
+    </div>
+  </div>
+  <div class="note-box mt6">
+    <h3>组件语气</h3>
+    <p>按钮是纸签，卡片是博物馆展签，反馈是轻轻出现/消失。避免弹跳、闪烁、游戏化音效；所有组件共用同一套纸色、墨色、金线。</p>
+  </div>
+  <div class="folio"><span>03 / COMPONENTS</span><span>04 / 07</span></div>
+</section>
+
+<!-- 05 WORLD & CAMERA -->
+<section class="page">
+  <div class="grain"></div><div class="axis-line"></div>
+  <div class="split-title">
+    <div><div class="eyebrow">04 / WORLD &amp; CAMERA</div><h2>世界与镜头</h2></div>
+    <div class="tagline">地图是纸<br>镜头是脚步</div>
+  </div>
+  <div class="row">
+    <div class="col" style="flex:1.15">
+      <div class="image-frame"><img src="../reference/coordinate-guide.jpg" alt="坐标与镜头参考" style="max-height:150mm;object-fit:contain"></div>
+      <div class="caption">COORDINATE GUIDE / 点击区、起点、初始视野</div>
+    </div>
+    <div class="col" style="flex:.85">
+      <div class="eyebrow">SPEC</div>
+      <table style="margin-top:2mm">
+        <tr><td><b>地图世界</b></td><td>1000 × 2483</td></tr>
+        <tr><td><b>取景宽度</b></td><td>390 世界像素</td></tr>
+        <tr><td><b>人物高度</b></td><td>46 世界像素</td></tr>
+        <tr><td><b>行走速度</b></td><td>126 px/s</td></tr>
+        <tr><td><b>镜头前视</b></td><td>-60（略向北）</td></tr>
+        <tr><td><b>跟随阻尼</b></td><td>8.5 指数平滑</td></tr>
+        <tr><td><b>靠近阈值</b></td><td>340 世界像素</td></tr>
+        <tr><td><b>点击外扩</b></td><td>6 世界像素</td></tr>
+      </table>
+      <div class="layers">
+        <div class="layer"><b>1 / 地图底图</b><span>整张竖版信息图，纸白底</span></div>
+        <div class="layer"><b>2 / 地面光环</b><span>可探索点的脉冲椭圆</span></div>
+        <div class="layer"><b>3 / y-sort 实体</b><span>人物 / 未来 NPC / 建筑前景</span></div>
+        <div class="layer"><b>4 / 屏幕角标</b><span>只在安全区且不过宽时出现</span></div>
+        <div class="layer"><b>5 / DOM HUD</b><span>品牌、进度、弹窗、摇杆</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="quote">“不是把整张地图摊开，而是让玩家用脚步把地图一段段翻开。”</div>
+  <div class="grid-2 mt6">
+    <div class="note-box">
+      <h3>为什么不是整图？</h3>
+      <p>蓝框约 385 × 610，而手机是 390 × 844，宽高比并不一致。项目按宽度对齐，取景约 390 × 840，并让镜头居中跟随中轴线；这样人物、建筑和两侧空间都能保留，而不是把一张信息图缩成缩略图。</p>
+    </div>
+    <div class="note-box">
+      <h3>镜头约束</h3>
+      <p>人物始终位于中轴附近；镜头有阻尼、有前视、有边界钳制；人物不会走出地图。未来加建筑时，只需重标 hitbox 和 aura，镜头逻辑不变。</p>
+    </div>
+  </div>
+  <div class="folio"><span>04 / WORLD &amp; CAMERA</span><span>05 / 07</span></div>
+</section>
+
+<!-- 06 INTERACTION -->
+<section class="page">
+  <div class="grain"></div><div class="axis-line"></div>
+  <div class="split-title">
+    <div><div class="eyebrow">05 / INTERACTION</div><h2>交互设计</h2></div>
+    <div class="tagline">走 → 靠近 → 点 → 读<br>没有失败，只有发现</div>
+  </div>
+  <div class="eyebrow">CORE LOOP</div>
+  <div class="flow">
+    <span class="node hot">开始漫游</span><span class="arrow">→</span>
+    <span class="node">摇杆 / 键盘行走</span><span class="arrow">→</span>
+    <span class="node">靠近建筑</span><span class="arrow">→</span>
+    <span class="node">轻触建筑</span><span class="arrow">→</span>
+    <span class="node">阅读介绍</span><span class="arrow">→</span>
+    <span class="node">记录发现</span><span class="arrow">→</span>
+    <span class="node">2/2 完成</span>
+  </div>
+  <div class="row mt6">
+    <div class="col">
+      <div class="eyebrow">INPUT MODEL</div>
+      <table style="margin-top:2mm">
+        <tr><td><b>虚拟摇杆</b></td><td>四方向移动；死区 0.1；最大偏移 32px</td></tr>
+        <tr><td><b>键盘</b></td><td>WASD / 方向键；与摇杆向量合并</td></tr>
+        <tr><td><b>轻触建筑</b></td><td>按下/抬起位移 &lt;12px；时长 &lt;700ms</td></tr>
+        <tr><td><b>空白点击</b></td><td>无反馈；不惩罚、不弹提示</td></tr>
+        <tr><td><b>归位</b></td><td>回起点；不重置发现进度</td></tr>
+        <tr><td><b>Esc</b></td><td>关闭当前弹窗</td></tr>
+      </table>
+      <div class="note-box mt4">
+        <h3>防误触三规则</h3>
+        <p><b>1.</b> 只认短按：拖动超过 12px 或按住超过 700ms 不算点击。<br>
+        <b>2.</b> 点击区大于图形：包含建筑 + 名称标签，额外外扩 6px。<br>
+        <b>3.</b> 防穿透：介绍卡打开后 420ms 内忽略关闭，避免触屏补发 click。</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="eyebrow">STATE MACHINE</div>
+      <div class="state-grid">
+        <div class="state-box"><b>Loading</b><span>预加载地图 / 人物 / 头图</span></div>
+        <div class="state-box"><b>Start</b><span>品牌页，等待“开始漫游”</span></div>
+        <div class="state-box"><b>Playing</b><span>可移动、可点击</span></div>
+        <div class="state-box"><b>Near</b><span>距离 &lt;340，出现提示</span></div>
+        <div class="state-box"><b>Sheet</b><span>暂停输入，阅读介绍</span></div>
+        <div class="state-box"><b>Complete</b><span>2/2，短 Toast 后继续</span></div>
+      </div>
+      <div class="image-frame mt4"><img src="preview-complete.jpg" alt="完成状态" style="max-height:70mm;object-fit:cover;object-position:top"></div>
+      <div class="caption">COMPLETE / 顶部反色 Chip + 完成 Toast + 不切场景</div>
+    </div>
+  </div>
+  <div class="eyebrow mt6">FEEDBACK MATRIX</div>
+  <table class="feedback" style="margin-top:2mm">
+    <tr><th>行为</th><th>视觉</th><th>文本</th><th>状态</th></tr>
+    <tr><td>开始</td><td>开始页淡出</td><td>沿中轴向南…</td><td>Playing</td></tr>
+    <tr><td>移动</td><td>四方向帧 + 镜头跟随</td><td>无</td><td>位置变化</td></tr>
+    <tr><td>靠近</td><td>地面光环 + 角标</td><td>轻触「天坛」…</td><td>Near</td></tr>
+    <tr><td>点击</td><td>底部卡片上滑</td><td>标题 / 标签 / 年表</td><td>记录发现</td></tr>
+    <tr><td>完成</td><td>Chip 反色 + Toast</td><td>全部收录</td><td>Playing</td></tr>
+  </table>
+  <div class="folio"><span>05 / INTERACTION</span><span>06 / 07</span></div>
+</section>
+
+<!-- 07 CONTENT & AUDIT -->
+<section class="page">
+  <div class="grain"></div><div class="axis-line"></div>
+  <div class="split-title">
+    <div><div class="eyebrow">06 / CONTENT &amp; AUDIT</div><h2>内容、体验与迭代</h2></div>
+    <div class="tagline">内容成为主角<br>系统负责让路</div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="eyebrow">POI CARD ANATOMY</div>
+      <table style="margin-top:2mm">
+        <tr><td><b>编号</b></td><td>01 / 02，建立收藏感</td></tr>
+        <tr><td><b>头图</b></td><td>2:1，建筑局部，避免标题重复</td></tr>
+        <tr><td><b>Kicker</b></td><td>一句话定位：南端起点 / 祭天圣地</td></tr>
+        <tr><td><b>标题</b></td><td>2–3 字，宋体，最大层级</td></tr>
+        <tr><td><b>导语</b></td><td>1 句“是什么”</td></tr>
+        <tr><td><b>标签</b></td><td>3 个关键词，金线描边</td></tr>
+        <tr><td><b>年表</b></td><td>3 个年份，宋体朱红</td></tr>
+        <tr><td><b>正文</b></td><td>1 段“为什么重要”</td></tr>
+      </table>
+      <div class="eyebrow mt6">TONE OF VOICE</div>
+      <p class="mt2">说明性、克制、可引用。先给定位，再给时间，再给价值；不用“震撼”“必看”等营销词。数字用阿拉伯数字，年份保留全称。</p>
+      <div class="quote">“让内容成为主角，交互只负责把玩家带到内容面前。”</div>
+      <div class="eyebrow mt6">SYSTEM IN CODE</div>
+      <table style="margin-top:2mm">
+        <tr><td><b>颜色/字体/阴影</b></td><td>css/style.css 的 :root</td></tr>
+        <tr><td><b>地图/镜头/人物</b></td><td>js/config.js</td></tr>
+        <tr><td><b>建筑文案/坐标</b></td><td>js/data/pois.js</td></tr>
+        <tr><td><b>渲染/遮挡接口</b></td><td>js/render/scene.js</td></tr>
+        <tr><td><b>交互状态/点击</b></td><td>js/main.js</td></tr>
+        <tr><td><b>弹窗/焦点/Toast</b></td><td>js/ui/ui.js</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <div class="eyebrow">AUDIT</div>
+      <ul class="audit" style="padding-left:4mm;margin-top:2mm">
+        <li><b>做得好：</b>纸、墨、朱、金贯穿所有界面；交互只有摇杆 + 点击；POI 数据驱动，易扩展；防误触、焦点陷阱、安全区、减少动效都考虑了。</li>
+        <li><b>问题 1：</b>地图是整张位图，没有真实遮挡/碰撞，人物会走过建筑图案。</li>
+        <li><b>问题 2：</b>只有两处可交互，其他建筑没有反馈，容易产生“为什么点不了”的疑问。</li>
+        <li><b>问题 3：</b>元信息 6.5–10px 偏小，关闭/帮助按钮 34–36px，低于 44px 建议触控尺寸。</li>
+        <li><b>问题 4：</b>没有存档；发现进度刷新即清零。</li>
+      </ul>
+      <div class="note-box mt4">
+        <h3>下一版优先级</h3>
+        <p><b>P0</b> 放大关键触控尺寸与元信息；<b>P1</b> 加 localStorage 存档与已发现地图标记；<b>P1</b> 给不可探索建筑弱提示；<b>P2</b> 把两处串成中轴路线任务；<b>P2</b> 做建筑前景层与 y-sort 遮挡。</p>
+      </div>
+      <div class="image-frame mt4"><img src="preview-yongdingmen.jpg" alt="永定门介绍卡" style="max-height:63mm;object-fit:cover;object-position:top"></div>
+      <div class="caption">CONTENT / 两处遗产点 · 两种年表 · 同一套标签语法</div>
+    </div>
+  </div>
+  <div class="folio"><span>06 / CONTENT &amp; AUDIT</span><span>07 / 07</span></div>
+</section>
+
+</body>
+</html>

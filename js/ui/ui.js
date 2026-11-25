@@ -1,21 +1,14 @@
+import { ATLAS_BADGES } from '../data/atlas.js';
+import { formatSavedAt } from '../core/progress.js';
+
 /**
- * 页面 UI：开始页、发现进度、靠近提示、建筑介绍卡、帮助卡。
- * 这个文件只管“显示什么”，不负责游戏状态，方便以后换皮。
+ * 页面 UI：开始页、HUD、气泡、散页卡、答题、图鉴、设置、Toast。
+ * 这个文件只负责显示与焦点管理，游戏状态由 main.js 维护。
  */
 export class UI {
-  /**
-   * @param {{
-   *   totalPois?: number,
-   *   onStart?: () => void,
-   *   onPoiClose?: () => void,
-   *   onHelpOpen?: () => void,
-   *   onHelpClose?: () => void,
-   *   onReset?: () => void,
-   * }} callbacks
-   */
   constructor(callbacks = {}) {
     this.callbacks = callbacks;
-    this.totalPois = callbacks.totalPois ?? 2;
+    this.totalBadges = ATLAS_BADGES.length;
     const byId = (id) => {
       const element = document.getElementById(id);
       if (!element) throw new Error(`缺少页面元素：#${id}`);
@@ -23,26 +16,30 @@ export class UI {
     };
 
     this.el = {
+      stage: byId('stage'),
       startScreen: byId('startScreen'),
       startBtn: byId('startBtn'),
       startLabel: byId('startLabel'),
       startHelp: byId('startHelp'),
-      helpBtn: byId('helpBtn'),
-      foundChip: byId('foundChip'),
-      foundCount: byId('foundCount'),
-      foundTotal: byId('foundTotal'),
       axisFill: byId('axisFill'),
       axisPin: byId('axisPin'),
       axisPercent: byId('axisPercent'),
-      nearHint: byId('nearHint'),
-      nearText: byId('nearText'),
+
+      settingsBtn: byId('settingsBtn'),
+      saveBtn: byId('saveBtn'),
+      atlasBtn: byId('atlasBtn'),
+      atlasCount: byId('atlasCount'),
+      bubble: byId('poiBubble'),
+      bubbleText: byId('bubbleText'),
+
       joystick: byId('joystick'),
-      resetBtn: byId('resetBtn'),
       toast: byId('toast'),
+
       sheetLayer: byId('sheetLayer'),
       poiSheet: byId('poiSheet'),
       sheetClose: byId('sheetClose'),
       sheetDone: byId('sheetDone'),
+      sheetDoneLabel: byId('sheetDone').querySelector('span'),
       sheetCover: byId('sheetCover'),
       sheetNo: byId('sheetNo'),
       sheetKicker: byId('sheetKicker'),
@@ -53,22 +50,43 @@ export class UI {
       sheetTags: byId('sheetTags'),
       sheetDetail: byId('sheetDetail'),
       sheetBody: byId('sheetBody'),
-      helpLayer: byId('helpLayer'),
-      helpClose: byId('helpClose'),
-      helpDone: byId('helpDone'),
+      quizBlock: byId('quizBlock'),
+      quizState: byId('quizState'),
+      quizQuestion: byId('quizQuestion'),
+      quizOptions: byId('quizOptions'),
+      quizFeedback: byId('quizFeedback'),
+      badgeReward: byId('badgeReward'),
+      rewardSeal: byId('rewardSeal'),
+      rewardName: byId('rewardName'),
+
+      atlasLayer: byId('atlasLayer'),
+      atlasCard: byId('atlasLayer').querySelector('.atlas-card'),
+      atlasClose: byId('atlasClose'),
+      atlasProgress: byId('atlasProgress'),
+      atlasGrid: byId('atlasGrid'),
+
+      settingsLayer: byId('settingsLayer'),
+      settingsCard: byId('settingsLayer').querySelector('.settings-card'),
+      settingsClose: byId('settingsClose'),
+      settingsDone: byId('settingsDone'),
+      settingsReset: byId('settingsReset'),
+      reduceMotionToggle: byId('reduceMotionToggle'),
+      largeTextToggle: byId('largeTextToggle'),
+      lastSaved: byId('lastSaved'),
     };
 
     this.poiOpen = false;
-    this.helpOpen = false;
+    this.atlasOpen = false;
+    this.settingsOpen = false;
     this.activePoi = null;
-    this.lastFound = -1;
     this.lastProgress = -1;
-    this.nearId = null;
     this.toastTimer = null;
     this.sheetHideTimer = null;
     this.sheetFocusTimer = null;
+    this.layerHideTimer = null;
     this.savedFocus = null;
     this.poiGuardUntil = 0;
+    this.lastBadgeCount = -1;
 
     this.bindEvents();
   }
@@ -80,8 +98,10 @@ export class UI {
       if (!el.startBtn.disabled) this.callbacks.onStart?.();
     });
 
-    el.helpBtn.addEventListener('click', () => this.callbacks.onHelpOpen?.());
-    el.resetBtn.addEventListener('click', () => this.callbacks.onReset?.());
+    el.settingsBtn.addEventListener('click', () => this.callbacks.onSettingsOpen?.());
+    el.saveBtn.addEventListener('click', () => this.callbacks.onSave?.());
+    el.atlasBtn.addEventListener('click', () => this.callbacks.onAtlasOpen?.());
+    el.bubble.addEventListener('click', () => this.callbacks.onBubbleClick?.());
 
     el.sheetClose.addEventListener('click', () => {
       if (this.canDismissPoi()) this.closePoi();
@@ -93,23 +113,41 @@ export class UI {
       if (this.canDismissPoi()) this.closePoi();
     });
 
-    el.helpClose.addEventListener('click', () => this.closeHelp());
-    el.helpDone.addEventListener('click', () => this.closeHelp());
-    el.helpLayer.querySelector('[data-close-help]')?.addEventListener('click', () => this.closeHelp());
+    el.atlasClose.addEventListener('click', () => this.closeAtlas());
+    el.atlasLayer.querySelector('[data-close-atlas]')?.addEventListener('click', () => this.closeAtlas());
+
+    el.settingsClose.addEventListener('click', () => this.closeSettings());
+    el.settingsDone.addEventListener('click', () => this.closeSettings());
+    el.settingsLayer.querySelector('[data-close-settings]')?.addEventListener('click', () => this.closeSettings());
+    el.settingsReset.addEventListener('click', () => {
+      this.callbacks.onReset?.();
+      this.closeSettings();
+    });
+
+    el.reduceMotionToggle.addEventListener('change', () => {
+      this.callbacks.onToggleSetting?.('reduceMotion', el.reduceMotionToggle.checked);
+    });
+    el.largeTextToggle.addEventListener('change', () => {
+      this.callbacks.onToggleSetting?.('largeText', el.largeTextToggle.checked);
+    });
 
     document.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape') return;
       if (this.poiOpen) {
         event.preventDefault();
         this.closePoi();
-      } else if (this.helpOpen) {
+      } else if (this.atlasOpen) {
         event.preventDefault();
-        this.closeHelp();
+        this.closeAtlas();
+      } else if (this.settingsOpen) {
+        event.preventDefault();
+        this.closeSettings();
       }
     });
 
     el.sheetLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.poiSheet));
-    el.helpLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.helpLayer));
+    el.atlasLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.atlasCard));
+    el.settingsLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.settingsCard));
   }
 
   setLoading(progress) {
@@ -117,9 +155,9 @@ export class UI {
     this.el.startLabel.textContent = `正在展开地图 · ${Math.round(progress * 100)}%`;
   }
 
-  ready() {
+  ready(hasSave) {
     this.el.startBtn.disabled = false;
-    this.el.startLabel.textContent = '开始漫游';
+    this.el.startLabel.textContent = hasSave ? '继续寻迹' : '开始寻迹';
   }
 
   fail(message) {
@@ -150,40 +188,58 @@ export class UI {
     }
   }
 
-  setNear(poi) {
-    const id = poi?.id ?? null;
-    if (id === this.nearId) return;
-    this.nearId = id;
+  setBadgeCount(count) {
+    const safe = Math.min(this.totalBadges, Math.max(0, count));
+    this.el.atlasCount.textContent = String(safe);
+    this.el.atlasCount.classList.toggle('is-zero', safe === 0);
+    this.el.atlasBtn.classList.toggle('has-new', safe > 0);
 
-    if (!poi) {
-      this.el.nearHint.hidden = true;
-      return;
+    if (this.lastBadgeCount >= 0 && safe > this.lastBadgeCount) {
+      this.el.atlasBtn.classList.remove('is-bump');
+      void this.el.atlasBtn.offsetWidth;
+      this.el.atlasBtn.classList.add('is-bump');
     }
-
-    this.el.nearText.textContent = `轻触「${poi.name}」· 阅读中轴故事`;
-    this.el.nearHint.hidden = false;
+    this.lastBadgeCount = safe;
   }
 
-  setFound(foundIds) {
-    const count = foundIds.size;
-    this.el.foundCount.textContent = String(count);
-    this.el.foundTotal.textContent = `/ ${this.totalPois}`;
-    this.el.foundChip.classList.toggle('is-complete', count >= this.totalPois);
-    this.el.foundChip.title =
-      count >= this.totalPois ? '中轴遗产点已全部收录' : `已发现 ${count} / ${this.totalPois} 处中轴遗产点`;
+  setSavedAt(iso) {
+    this.el.lastSaved.textContent = formatSavedAt(iso);
+    this.el.saveBtn.title = `上次存档：${formatSavedAt(iso)}`;
+  }
 
-    if (count !== this.lastFound && this.lastFound >= 0) {
-      this.el.foundChip.classList.remove('is-bump');
-      void this.el.foundChip.offsetWidth;
-      this.el.foundChip.classList.add('is-bump');
+  flashSave() {
+    this.el.saveBtn.classList.remove('is-saved');
+    void this.el.saveBtn.offsetWidth;
+    this.el.saveBtn.classList.add('is-saved');
+    window.setTimeout(() => this.el.saveBtn.classList.remove('is-saved'), 900);
+  }
+
+  showBubble(poi, point) {
+    if (!poi || !point) {
+      this.hideBubble();
+      return;
     }
-    this.lastFound = count;
+    const { bubble, bubbleText, stage } = this.el;
+    bubble.hidden = false;
+    bubbleText.textContent = `${poi.name} · 轻触了解`;
+    const width = stage.clientWidth || window.innerWidth;
+    const height = stage.clientHeight || window.innerHeight;
+    const margin = 72;
+    const x = Math.min(width - margin, Math.max(margin, point.x));
+    const y = Math.min(height - 150, Math.max(100, point.y));
+    bubble.style.left = `${x}px`;
+    bubble.style.top = `${y}px`;
+  }
+
+  hideBubble() {
+    this.el.bubble.hidden = true;
   }
 
   /**
    * @param {object} poi
+   * @param {boolean} earned
    */
-  openPoi(poi) {
+  openPoi(poi, earned) {
     if (this.poiOpen) return;
 
     const { el } = this;
@@ -192,7 +248,7 @@ export class UI {
     this.poiGuardUntil = performance.now() + 420;
     this.savedFocus = document.activeElement;
 
-    el.sheetNo.textContent = `${poi.no} / ${String(this.totalPois).padStart(2, '0')}`;
+    el.sheetNo.textContent = `${poi.no} / ${String(this.totalBadges).padStart(2, '0')}`;
     el.sheetKicker.textContent = poi.kicker;
     el.sheetTitle.textContent = poi.name;
     el.sheetEn.textContent = poi.en;
@@ -212,14 +268,13 @@ export class UI {
     }
 
     this.renderDetail(poi.detail);
+    this.renderQuiz(poi, earned);
 
     el.sheetLayer.hidden = false;
     el.sheetLayer.setAttribute('aria-hidden', 'false');
     window.clearTimeout(this.sheetHideTimer);
     window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        el.sheetLayer.classList.add('is-open');
-      });
+      window.requestAnimationFrame(() => el.sheetLayer.classList.add('is-open'));
     });
 
     window.clearTimeout(this.sheetFocusTimer);
@@ -262,11 +317,74 @@ export class UI {
         const label = document.createElement('span');
         label.textContent = item;
         flow.append(label);
-        if (index < detail.items.length - 1) {
-          flow.append(document.createElement('i'));
-        }
+        if (index < detail.items.length - 1) flow.append(document.createElement('i'));
       });
       sheetDetail.append(flow);
+    }
+  }
+
+  renderQuiz(poi, earned) {
+    const { el } = this;
+    const quiz = poi.quiz;
+    el.quizBlock.classList.toggle('is-earned', earned);
+    el.quizState.textContent = earned ? '已点亮' : '未完成';
+    el.quizQuestion.textContent = quiz.question;
+    el.quizFeedback.hidden = true;
+    el.quizFeedback.className = 'quiz-feedback';
+    el.badgeReward.hidden = !earned;
+    el.rewardSeal.textContent = poi.seal;
+    el.rewardName.textContent = quiz.badgeLabel;
+    el.sheetDoneLabel.textContent = '继续漫游';
+
+    el.quizOptions.replaceChildren();
+    quiz.options.forEach((label, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'quiz-option';
+      button.textContent = label;
+      button.disabled = earned;
+      if (earned && index === quiz.answer) button.classList.add('is-correct');
+      button.addEventListener('click', () => {
+        if (!this.poiOpen || this.el.quizBlock.classList.contains('is-earned')) return;
+        this.callbacks.onQuizAnswer?.(index);
+      });
+      el.quizOptions.append(button);
+    });
+
+    if (earned) {
+      el.quizFeedback.hidden = false;
+      el.quizFeedback.className = 'quiz-feedback is-correct';
+      el.quizFeedback.textContent = quiz.correct;
+    }
+  }
+
+  showQuizResult(correct, selectedIndex, poi) {
+    const { el } = this;
+    const buttons = Array.from(el.quizOptions.querySelectorAll('button'));
+
+    buttons.forEach((button, index) => {
+      button.classList.remove('is-wrong', 'is-correct');
+      if (correct) {
+        button.disabled = true;
+        if (index === poi.quiz.answer) button.classList.add('is-correct');
+      } else if (index === selectedIndex) {
+        button.classList.add('is-wrong');
+        button.disabled = true;
+      }
+    });
+
+    el.quizFeedback.hidden = false;
+    el.quizFeedback.className = `quiz-feedback ${correct ? 'is-correct' : 'is-wrong'}`;
+    el.quizFeedback.textContent = correct ? poi.quiz.correct : poi.quiz.wrong;
+
+    if (correct) {
+      el.quizBlock.classList.add('is-earned');
+      el.quizState.textContent = '已点亮';
+      el.badgeReward.hidden = false;
+      el.sheetDoneLabel.textContent = '收下徽章 · 继续';
+      window.requestAnimationFrame(() => {
+        el.badgeReward.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
     }
   }
 
@@ -291,30 +409,87 @@ export class UI {
     this.restoreFocus();
   }
 
-  openHelp() {
-    if (this.helpOpen) return;
-    const { helpLayer, helpDone } = this.el;
-    this.helpOpen = true;
+  openAtlas(badges) {
+    if (this.atlasOpen) return;
+    const { el } = this;
+    this.atlasOpen = true;
     this.savedFocus = document.activeElement;
-    helpLayer.hidden = false;
-    helpLayer.setAttribute('aria-hidden', 'false');
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => helpLayer.classList.add('is-open'));
-    });
-    window.setTimeout(() => helpDone.focus({ preventScroll: true }), 300);
+    this.renderAtlas(badges);
+    this.openSystemLayer(el.atlasLayer, el.atlasClose);
   }
 
-  closeHelp() {
-    if (!this.helpOpen) return;
-    this.helpOpen = false;
-    const { helpLayer } = this.el;
-    helpLayer.classList.remove('is-open');
-    helpLayer.setAttribute('aria-hidden', 'true');
-    window.setTimeout(() => {
-      helpLayer.hidden = true;
-    }, 340);
-    this.callbacks.onHelpClose?.();
+  renderAtlas(badges) {
+    const { el } = this;
+    const unlockedCount = ATLAS_BADGES.filter((badge) => badges.has(badge.id)).length;
+    el.atlasProgress.textContent = `已点亮 ${unlockedCount} / ${ATLAS_BADGES.length}`;
+    el.atlasGrid.replaceChildren();
+
+    for (const badge of ATLAS_BADGES) {
+      const unlocked = badges.has(badge.id);
+      const node = document.createElement('div');
+      node.className = `atlas-badge ${unlocked ? 'is-unlocked' : 'is-locked'}`;
+      node.setAttribute('role', 'img');
+      node.setAttribute('aria-label', `${badge.name}，${unlocked ? '已点亮' : '未点亮'}`);
+
+      const seal = document.createElement('span');
+      seal.className = 'atlas-seal';
+      seal.textContent = badge.seal;
+
+      const name = document.createElement('strong');
+      name.className = 'atlas-name';
+      name.textContent = badge.name;
+
+      const hint = document.createElement('span');
+      hint.className = 'atlas-hint';
+      hint.textContent = unlocked ? '已点亮' : badge.hint;
+
+      node.append(seal, name, hint);
+      el.atlasGrid.append(node);
+    }
+  }
+
+  closeAtlas() {
+    if (!this.atlasOpen) return;
+    this.atlasOpen = false;
+    this.closeSystemLayer(this.el.atlasLayer);
+    this.callbacks.onAtlasClose?.();
     this.restoreFocus();
+  }
+
+  openSettings(settings) {
+    if (this.settingsOpen) return;
+    const { el } = this;
+    this.settingsOpen = true;
+    this.savedFocus = document.activeElement;
+    el.reduceMotionToggle.checked = Boolean(settings.reduceMotion);
+    el.largeTextToggle.checked = Boolean(settings.largeText);
+    this.openSystemLayer(el.settingsLayer, el.settingsDone);
+  }
+
+  closeSettings() {
+    if (!this.settingsOpen) return;
+    this.settingsOpen = false;
+    this.closeSystemLayer(this.el.settingsLayer);
+    this.callbacks.onSettingsClose?.();
+    this.restoreFocus();
+  }
+
+  openSystemLayer(layer, focusTarget) {
+    layer.hidden = false;
+    layer.setAttribute('aria-hidden', 'false');
+    window.clearTimeout(this.layerHideTimer);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => layer.classList.add('is-open'));
+    });
+    window.setTimeout(() => focusTarget.focus({ preventScroll: true }), 320);
+  }
+
+  closeSystemLayer(layer) {
+    layer.classList.remove('is-open');
+    layer.setAttribute('aria-hidden', 'true');
+    this.layerHideTimer = window.setTimeout(() => {
+      layer.hidden = true;
+    }, 360);
   }
 
   toast(message, duration = 2400) {

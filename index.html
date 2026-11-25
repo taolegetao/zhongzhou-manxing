@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1d2a29">
-  <meta name="description" content="中轴寻迹：从永定门到钟鼓楼的北京中轴线数字漫游 Demo。拖动行走，轻触永定门、天坛阅读故事。">
+  <meta name="description" content="中轴寻迹：北京中轴线 H5 互动探索原型。走到永定门前，完成小测，点亮图鉴徽章。">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>中轴寻迹 · 北京中轴线数字漫游</title>
+  <title>中轴寻迹 · 北京中轴线互动探索</title>
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./css/style.css">
 </head>
@@ -27,14 +27,6 @@
             <p>BEIJING CENTRAL AXIS</p>
           </div>
         </div>
-        <div class="hud-tools">
-          <div id="foundChip" class="found-chip" aria-live="polite" title="已发现的中轴遗产点">
-            <span class="found-pulse" aria-hidden="true"></span>
-            <span class="found-text">发现</span>
-            <strong id="foundCount">0</strong><span id="foundTotal" class="found-total">/ 2</span>
-          </div>
-          <button id="helpBtn" class="icon-btn" type="button" aria-label="查看玩法">?</button>
-        </div>
       </header>
 
       <div class="axis-meter" aria-hidden="true">
@@ -49,10 +41,26 @@
         </div>
       </div>
 
-      <div id="nearHint" class="near-hint" aria-live="polite" hidden>
-        <span class="near-dot" aria-hidden="true"></span>
-        <span id="nearText">轻触建筑，阅读中轴故事</span>
-      </div>
+      <nav class="system-dock" aria-label="系统菜单">
+        <button id="settingsBtn" class="dock-btn" type="button" aria-label="打开设置">
+          <span class="dock-glyph" aria-hidden="true">设</span>
+          <span class="dock-label">设置</span>
+        </button>
+        <button id="saveBtn" class="dock-btn" type="button" aria-label="保存当前进度">
+          <span class="dock-glyph" aria-hidden="true">存</span>
+          <span class="dock-label">存档</span>
+        </button>
+        <button id="atlasBtn" class="dock-btn" type="button" aria-label="打开中轴线徽章图鉴">
+          <span class="dock-glyph" aria-hidden="true">鉴</span>
+          <span class="dock-label">图鉴</span>
+          <span id="atlasCount" class="dock-count" aria-live="polite">0</span>
+        </button>
+      </nav>
+
+      <button id="poiBubble" class="poi-bubble" type="button" hidden>
+        <span class="bubble-spark" aria-hidden="true">✦</span>
+        <span id="bubbleText">永定门 · 轻触了解</span>
+      </button>
 
       <div class="bottom-ui">
         <div class="joystick-wrap">
@@ -65,13 +73,6 @@
             <div id="stickKnob" class="stick-knob" aria-hidden="true"></div>
           </div>
           <span class="joystick-label">拖动行走</span>
-        </div>
-
-        <div class="bottom-right">
-          <button id="resetBtn" class="round-action" type="button" aria-label="回到起点">
-            <span>归位</span>
-          </button>
-          <p class="tap-tip">轻触建筑<br>阅读故事</p>
         </div>
       </div>
 
@@ -90,7 +91,7 @@
         <div class="start-topline">
           <span>北京中轴线</span>
           <i aria-hidden="true"></i>
-          <span>数字漫游</span>
+          <span>互动探索</span>
         </div>
 
         <div class="start-main">
@@ -109,7 +110,7 @@
             <span id="startLabel">正在展开地图</span>
             <span class="start-arrow" aria-hidden="true">→</span>
           </button>
-          <p id="startHelp" class="start-help">拖动左下摇杆行走 · 轻触建筑阅读</p>
+          <p id="startHelp" class="start-help">拖动摇杆走到永定门前 · 轻触气泡</p>
         </div>
 
         <footer class="start-footer">
@@ -129,19 +130,37 @@
         <div id="sheetCover" class="sheet-cover">
           <div class="cover-top-shade" aria-hidden="true"></div>
           <div class="cover-bottom-shade" aria-hidden="true"></div>
-          <span id="sheetNo" class="cover-no">01 / 02</span>
+          <span id="sheetNo" class="cover-no">01 / 06</span>
           <div class="cover-caption">
             <span id="sheetKicker">北京中轴线 · 南端起点</span>
             <h2 id="sheetTitle">永定门</h2>
             <p id="sheetEn">Yongdingmen Gate</p>
           </div>
-          <div id="sheetStamp" class="cover-stamp" aria-hidden="true">南</div>
+          <div id="sheetStamp" class="cover-stamp" aria-hidden="true">永</div>
         </div>
 
         <div class="sheet-body">
           <p id="sheetIntro" class="sheet-lead"></p>
           <div id="sheetTags" class="tag-row"></div>
           <div id="sheetDetail" class="sheet-detail"></div>
+
+          <section id="quizBlock" class="quiz-block">
+            <div class="quiz-head">
+              <span class="quiz-kicker">装订小测</span>
+              <span id="quizState" class="quiz-state">未完成</span>
+            </div>
+            <h3 id="quizQuestion" class="quiz-question"></h3>
+            <div id="quizOptions" class="quiz-options"></div>
+            <p id="quizFeedback" class="quiz-feedback" hidden></p>
+            <div id="badgeReward" class="badge-reward" hidden>
+              <span id="rewardSeal" class="reward-seal" aria-hidden="true">永</span>
+              <div>
+                <strong id="rewardName">永定门徽章</strong>
+                <p>已收入图鉴</p>
+              </div>
+            </div>
+          </section>
+
           <p id="sheetBody" class="sheet-copy"></p>
           <p class="source-note">内容据课程素材、北京市人民政府与国家文物局公开资料整理 · 仅用于课程演示</p>
         </div>
@@ -155,27 +174,39 @@
       </article>
     </div>
 
-    <div id="helpLayer" class="help-layer" hidden>
-      <div class="sheet-backdrop" data-close-help></div>
-      <article class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-        <button id="helpClose" class="sheet-close help-close" type="button" aria-label="关闭玩法说明">×</button>
-        <p class="help-kicker">HOW TO WANDER</p>
-        <h2 id="helpTitle">怎样漫游中轴</h2>
-        <ul class="help-list">
-          <li>
-            <span class="help-index">壹</span>
-            <div><strong>四方位行走</strong><p>拖动左下摇杆，或使用键盘 WASD / 方向键。</p></div>
-          </li>
-          <li>
-            <span class="help-index">贰</span>
-            <div><strong>轻触建筑</strong><p>靠近永定门或天坛，轻触建筑即可展开介绍。</p></div>
-          </li>
-          <li>
-            <span class="help-index">叁</span>
-            <div><strong>收集两处遗产点</strong><p>顶部“发现”会记录你读过的建筑，读完两处即完成本次漫游。</p></div>
-          </li>
-        </ul>
-        <button id="helpDone" class="primary-btn" type="button">开始漫游</button>
+    <div id="atlasLayer" class="system-layer" hidden>
+      <div class="system-backdrop" data-close-atlas></div>
+      <article class="atlas-card" role="dialog" aria-modal="true" aria-labelledby="atlasTitle">
+        <button id="atlasClose" class="system-close" type="button" aria-label="关闭图鉴">×</button>
+        <p class="system-kicker">COLLECTION</p>
+        <h2 id="atlasTitle">中轴线徽章</h2>
+        <p id="atlasProgress" class="atlas-progress">已点亮 0 / 6</p>
+        <div id="atlasGrid" class="atlas-grid"></div>
+        <p class="atlas-note">走到建筑前，完成小游戏，即可点亮一枚徽章。</p>
+      </article>
+    </div>
+
+    <div id="settingsLayer" class="system-layer" hidden>
+      <div class="system-backdrop" data-close-settings></div>
+      <article class="settings-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <button id="settingsClose" class="system-close" type="button" aria-label="关闭设置">×</button>
+        <p class="system-kicker">SETTINGS</p>
+        <h2 id="settingsTitle">设置</h2>
+
+        <label class="setting-row" for="reduceMotionToggle">
+          <span><strong>减少动效</strong><small>关闭镜头与弹窗的大部分动画</small></span>
+          <input id="reduceMotionToggle" type="checkbox" role="switch">
+        </label>
+
+        <label class="setting-row" for="largeTextToggle">
+          <span><strong>大字模式</strong><small>放大介绍卡与图鉴文字</small></span>
+          <input id="largeTextToggle" type="checkbox" role="switch">
+        </label>
+
+        <p class="settings-meta">上次存档：<span id="lastSaved">尚未存档</span></p>
+        <button id="settingsReset" class="secondary-btn" type="button">回到起点</button>
+        <button id="settingsDone" class="primary-btn" type="button">返回游戏</button>
+        <p class="settings-version">中轴寻迹 · v1.2.0</p>
       </article>
     </div>
   </main>

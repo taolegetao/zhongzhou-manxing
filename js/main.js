@@ -1,19 +1,30 @@
 import { AXIS, HIT_SLOP, PLAYER, VIEW, WORLD } from './config.js';
 import { POIS } from './data/pois.js';
+import { ATLAS_BADGES } from './data/atlas.js';
 import { AssetStore } from './core/assets.js';
 import { Camera, clamp } from './core/camera.js';
 import { InputController } from './core/input.js';
 import { Player } from './core/player.js';
+import { formatSavedAt, loadProgress, saveProgress } from './core/progress.js';
 import { SceneRenderer } from './render/scene.js';
 import { UI } from './ui/ui.js';
+
+const saved = loadProgress();
+const validBadgeIds = new Set(ATLAS_BADGES.map((badge) => badge.id));
 
 const state = {
   loaded: false,
   started: false,
   modal: false,
-  found: new Set(),
-  justCompleted: false,
+  badges: new Set((saved?.badges ?? []).filter((id) => validBadgeIds.has(id))),
+  settings: {
+    reduceMotion: Boolean(saved?.settings?.reduceMotion),
+    largeText: Boolean(saved?.settings?.largeText),
+  },
+  savedAt: saved?.savedAt ?? null,
   nearPoi: null,
+  activePoi: null,
+  pendingBadgeToast: false,
 };
 
 const elements = {
@@ -25,11 +36,18 @@ const elements = {
 
 const assets = new AssetStore();
 const ui = new UI({
-  totalPois: POIS.length,
   onStart: startGame,
   onPoiClose: closePoi,
-  onHelpOpen: openHelp,
-  onHelpClose: closeHelp,
+  onSettingsOpen: openSettings,
+  onSettingsClose: closeSettings,
+  onAtlasOpen: openAtlas,
+  onAtlasClose: closeAtlas,
+  onSave: () => saveGame(true),
+  onToggleSetting: toggleSetting,
+  onQuizAnswer: answerQuiz,
+  onBubbleClick: () => {
+    if (state.nearPoi) openPoi(state.nearPoi);
+  },
   onReset: resetToStart,
 });
 
@@ -43,6 +61,7 @@ let camera;
 let scene;
 let lastTime = performance.now();
 
+applySettings();
 boot();
 
 async function boot() {
@@ -56,6 +75,11 @@ async function boot() {
     await assets.loadAll(manifest, (progress) => ui.setLoading(progress));
 
     player = new Player(PLAYER);
+    if (saved?.player) {
+      player.x = clamp(saved.player.x, PLAYER.bounds.minX, PLAYER.bounds.maxX);
+      player.y = clamp(saved.player.y, PLAYER.bounds.minY, PLAYER.bounds.maxY);
+    }
+
     camera = new Camera();
     scene = new SceneRenderer({
       canvas: elements.canvas,
@@ -66,8 +90,9 @@ async function boot() {
     resize();
     camera.snapTo(player.x, player.y + VIEW.lookAheadY);
     state.loaded = true;
-    ui.ready();
-    ui.setFound(state.found);
+    ui.ready(Boolean(state.savedAt));
+    ui.setBadgeCount(state.badges.size);
+    ui.setSavedAt(state.savedAt);
     bindTapControls();
     bindGlobalEvents();
     exposeDebugApi();
@@ -103,7 +128,7 @@ function tick(now) {
       nearPois: getNearPois(player.x, player.y),
       nearestPoi: state.nearPoi,
       time: now,
-      showHints: state.started && !state.modal && Boolean(state.nearPoi),
+      showHints: false,
     });
   }
 
@@ -116,9 +141,13 @@ function update(dt) {
   camera.follow(player.x, player.y + VIEW.lookAheadY, dt, VIEW.followLerp);
 
   const nextNear = findNearestPoi(player.x, player.y);
-  if (nextNear?.id !== state.nearPoi?.id) {
-    state.nearPoi = nextNear;
-    ui.setNear(state.modal ? null : nextNear);
+  state.nearPoi = nextNear;
+
+  if (state.started && !state.modal && nextNear) {
+    const point = camera.worldToScreen(nextNear.bubble.x, nextNear.bubble.y);
+    ui.showBubble(nextNear, point);
+  } else {
+    ui.hideBubble();
   }
 
   ui.setProgress(progressFromY(player.y));
@@ -127,7 +156,7 @@ function update(dt) {
 function getNearPois(x, y) {
   const result = [];
   for (const poi of POIS) {
-    if (distanceToBox(x, y, poi.hitbox) <= VIEW.proximity + 135) {
+    if (distanceToBox(x, y, poi.hitbox) <= VIEW.proximity + 90) {
       result.push(poi);
     }
   }
@@ -166,7 +195,7 @@ function startGame() {
   input.setEnabled(true);
   ui.hideStart();
   window.setTimeout(() => {
-    ui.toast('沿中轴向南，拜访天坛与永定门', 2800);
+    ui.toast('走到永定门前，轻触气泡或城门', 2800);
   }, 720);
 }
 
@@ -174,52 +203,107 @@ function openPoi(poi) {
   if (!state.started || state.modal || !poi) return;
 
   state.modal = true;
-  state.justCompleted = false;
+  state.activePoi = poi;
+  state.pendingBadgeToast = false;
   input.setEnabled(false);
   player.stop();
-  ui.setNear(null);
-
-  const isNew = !state.found.has(poi.id);
-  state.found.add(poi.id);
-  ui.setFound(state.found);
-  if (isNew && state.found.size === POIS.length) {
-    state.justCompleted = true;
-  }
-
-  ui.openPoi(poi);
+  ui.hideBubble();
+  ui.openPoi(poi, state.badges.has(poi.id));
 }
 
 function closePoi() {
   state.modal = false;
+  state.activePoi = null;
   input.setEnabled(state.started);
-  ui.setNear(state.nearPoi);
-  if (state.justCompleted) {
-    state.justCompleted = false;
-    ui.toast('中轴遗产点已全部收录 · 本次漫游完成', 3400);
+  if (state.pendingBadgeToast) {
+    state.pendingBadgeToast = false;
+    ui.toast('永定门徽章已点亮 · 进度已保存', 3000);
   }
 }
 
-function openHelp() {
+function answerQuiz(index) {
+  const poi = state.activePoi;
+  if (!poi || !poi.quiz || state.badges.has(poi.id)) return;
+
+  const correct = index === poi.quiz.answer;
+  ui.showQuizResult(correct, index, poi);
+
+  if (!correct) return;
+
+  state.badges.add(poi.id);
+  state.pendingBadgeToast = true;
+  ui.setBadgeCount(state.badges.size);
+  saveGame(false);
+}
+
+function openAtlas() {
   if (!state.started || state.modal) return;
   state.modal = true;
   input.setEnabled(false);
   player.stop();
-  ui.setNear(null);
-  ui.openHelp();
+  ui.hideBubble();
+  ui.openAtlas(state.badges);
 }
 
-function closeHelp() {
+function closeAtlas() {
   state.modal = false;
   input.setEnabled(state.started);
-  ui.setNear(state.nearPoi);
+}
+
+function openSettings() {
+  if (!state.started || state.modal) return;
+  state.modal = true;
+  input.setEnabled(false);
+  player.stop();
+  ui.hideBubble();
+  ui.openSettings(state.settings);
+}
+
+function closeSettings() {
+  state.modal = false;
+  input.setEnabled(state.started);
+}
+
+function toggleSetting(key, value) {
+  if (key !== 'reduceMotion' && key !== 'largeText') return;
+  state.settings[key] = Boolean(value);
+  applySettings();
+  saveGame(false);
+}
+
+function applySettings() {
+  document.documentElement.classList.toggle('reduce-motion', state.settings.reduceMotion);
+  document.body.classList.toggle('large-text', state.settings.largeText);
+}
+
+function saveGame(showToast) {
+  if (!player) return false;
+  const savedAt = saveProgress({
+    badges: state.badges,
+    player,
+    settings: state.settings,
+  });
+  if (!savedAt) {
+    if (showToast) ui.toast('存档失败，请检查浏览器存储权限', 2600);
+    return false;
+  }
+
+  state.savedAt = savedAt;
+  ui.setSavedAt(savedAt);
+  ui.flashSave();
+  if (showToast) {
+    ui.toast(`进度已保存 · ${formatSavedAt(savedAt)}`, 2200);
+  }
+  return true;
 }
 
 function resetToStart() {
-  if (!state.started || state.modal) return;
+  if (!state.started || !player) return;
   player.reset();
   camera.snapTo(player.x, player.y + VIEW.lookAheadY);
   input.reset();
-  ui.toast('已回到起点 · 外金水桥附近', 2200);
+  saveGame(false);
+  ui.toast('已回到永定门前', 2000);
 }
 
 function bindTapControls() {
@@ -313,7 +397,10 @@ function bindGlobalEvents() {
 
   document.addEventListener('visibilitychange', () => {
     lastTime = performance.now();
-    if (document.hidden) input.reset();
+    if (document.hidden) {
+      input.reset();
+      if (state.started) saveGame(false);
+    }
   });
 }
 
@@ -336,9 +423,18 @@ function exposeDebugApi() {
     openPoi(id) {
       openPoi(POIS.find((poi) => poi.id === id));
     },
-    setFound(ids) {
-      state.found = new Set(ids);
-      ui.setFound(state.found);
+    answerQuiz(index) {
+      answerQuiz(index);
+    },
+    openAtlas() {
+      openAtlas();
+    },
+    save() {
+      return saveGame(false);
+    },
+    setBadges(ids) {
+      state.badges = new Set(ids);
+      ui.setBadgeCount(state.badges.size);
     },
     world: WORLD,
   };

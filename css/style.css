@@ -2532,3 +2532,22 @@ html.reduce-motion *::after {
     font-size: 9px;
   }
 }
+
+/* In-game confirmation dialog */
+.confirm-layer { z-index: 60; }
+.confirm-card {
+  position: relative; width: 100%; max-width: 360px; padding: 24px 21px 19px;
+  border: 1px solid rgba(255,255,255,.58); border-radius: 18px; background: var(--paper-strong);
+  box-shadow: 0 22px 60px rgba(9,18,15,.4); opacity: 0; transform: translateY(10px) scale(.98);
+  transition: opacity .26s ease, transform .26s cubic-bezier(.18,.78,.22,1);
+}
+.system-layer.is-open .confirm-card { opacity: 1; transform: none; }
+.confirm-card h2 { margin: 0 0 10px; color: var(--ink); font-family: var(--serif); font-size: 22px; letter-spacing: .06em; }
+.confirm-body { margin: 0 0 18px; color: var(--ink-soft); font-size: 10.5px; line-height: 1.8; white-space: pre-line; }
+.confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.confirm-actions .secondary-btn, .confirm-actions .primary-btn { min-height: 42px; margin: 0; }
+@media (max-width: 359px) {
+  .confirm-card { padding: 20px 16px 16px; }
+  .confirm-card h2 { font-size: 20px; }
+  .confirm-body { font-size: 10px; }
+}

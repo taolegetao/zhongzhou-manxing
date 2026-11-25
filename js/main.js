@@ -1,13 +1,13 @@
-import { HIT_SLOP, PLAYER, VIEW, WORLD } from './config.js';
-import { POIS } from './data/pois.js';
-import { ATLAS_BADGES } from './data/atlas.js';
-import { AssetStore } from './core/assets.js';
-import { Camera, clamp } from './core/camera.js';
-import { InputController } from './core/input.js';
-import { Player } from './core/player.js';
-import { formatSavedAt, loadProgress, loadSlots, saveProgress, saveSlot } from './core/progress.js';
-import { SceneRenderer } from './render/scene.js';
-import { UI } from './ui/ui.js';
+import { HIT_SLOP, PLAYER, VIEW, WORLD } from './config.js?v=1.3.2';
+import { POIS } from './data/pois.js?v=1.3.2';
+import { ATLAS_BADGES } from './data/atlas.js?v=1.3.2';
+import { AssetStore } from './core/assets.js?v=1.3.2';
+import { Camera, clamp } from './core/camera.js?v=1.3.2';
+import { InputController } from './core/input.js?v=1.3.2';
+import { Player } from './core/player.js?v=1.3.2';
+import { formatSavedAt, loadProgress, loadSlots, saveProgress, saveSlot } from './core/progress.js?v=1.3.2';
+import { SceneRenderer } from './render/scene.js?v=1.3.2';
+import { UI } from './ui/ui.js?v=1.3.2';
 
 const saved = loadProgress();
 const validBadgeIds = new Set(ATLAS_BADGES.map((badge) => badge.id));
@@ -277,10 +277,18 @@ function closeSaveSlots() {
   input.setEnabled(state.started);
 }
 
-function saveToSlot(index) {
+async function saveToSlot(index) {
   if (!player) return;
   const slots = loadSlots();
-  if (slots[index] && !window.confirm(`存档 ${index + 1} 已有进度，确定覆盖吗？`)) return;
+  if (slots[index]) {
+    const ok = await ui.confirm({
+      title: `覆盖存档 ${String(index + 1).padStart(2, '0')}`,
+      body: `这个存档位已有进度：\n徽章 ${slots[index].badges.filter((id) => ATLAS_BADGES.some((badge) => badge.id === id)).length} / ${POIS.length} · ${ui.locationLabel(slots[index].player)}\n\n覆盖后，旧存档将无法恢复。`,
+      okText: '覆盖保存',
+      cancelText: '取消',
+    });
+    if (!ok) return;
+  }
 
   const result = saveSlot(index, {
     badges: state.badges,
@@ -297,23 +305,30 @@ function saveToSlot(index) {
   ui.toast(`已保存到存档 ${String(index + 1).padStart(2, '0')}`, 2000);
 }
 
-function loadFromSlot(index) {
+async function loadFromSlot(index) {
   const slot = loadSlots()[index];
   if (!slot) return;
 
   const slotCount = slot.badges.filter((id) => ATLAS_BADGES.some((badge) => badge.id === id)).length;
   const currentCount = state.badges.size;
-  if (!window.confirm(`读取存档 ${index + 1}（${slotCount} / ${POIS.length}）会替换当前 ${currentCount} / ${POIS.length} 的进度，确定继续吗？`)) {
-    return;
-  }
+  const ok = await ui.confirm({
+    title: `读取存档 ${String(index + 1).padStart(2, '0')}`,
+    body: `旧存档：徽章 ${slotCount} / ${POIS.length} · ${ui.locationLabel(slot.player)}\n当前进度：徽章 ${currentCount} / ${POIS.length} · ${ui.locationLabel(player)}\n\n读取后，当前进度会被旧存档替换。`,
+    okText: '确认读取',
+    cancelText: '取消',
+  });
+  if (!ok) return;
 
   applySnapshot(slot);
   ui.closeSaveSlots();
-  ui.toast(`已读取存档 ${String(index + 1).padStart(2, '0')}`, 2200);
+  ui.toast(`已读取存档 ${String(index + 1).padStart(2, '0')} · ${slotCount} / ${POIS.length}`, 2600);
 }
 
 function applySnapshot(snapshot) {
   if (!snapshot) return;
+  state.modal = false;
+  state.activePoi = null;
+  state.pendingBadgeToast = false;
   state.badges = new Set(snapshot.badges.filter((id) => ATLAS_BADGES.some((badge) => badge.id === id)));
   state.settings = {
     reduceMotion: Boolean(snapshot.settings?.reduceMotion),
@@ -328,6 +343,7 @@ function applySnapshot(snapshot) {
     input.reset();
   }
 
+  ui.resetQuizView();
   ui.setBadgeCount(state.badges.size);
   ui.setSavedAt(snapshot.savedAt);
   saveGame(false);

@@ -1,4 +1,4 @@
-import { WORLD } from '../config.js';
+import { WORLD } from '../config.js?v=1.3.2';
 
 /**
  * 世界坐标 → 屏幕坐标的唯一转换入口。

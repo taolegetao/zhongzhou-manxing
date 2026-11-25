@@ -1,4 +1,4 @@
-import { PLAYER } from '../config.js';
+import { PLAYER } from '../config.js?v=1.3.2';
 
 /**
  * 人物移动与四方向动画状态。

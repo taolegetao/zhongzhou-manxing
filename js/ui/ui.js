@@ -1,5 +1,5 @@
-import { ATLAS_BADGES } from '../data/atlas.js';
-import { formatSavedAt } from '../core/progress.js';
+import { ATLAS_BADGES } from '../data/atlas.js?v=1.3.2';
+import { formatSavedAt } from '../core/progress.js?v=1.3.2';
 
 /**
  * 页面 UI：开始页、HUD、气泡、散页卡、答题、图鉴、设置、Toast。
@@ -39,6 +39,13 @@ export class UI {
       saveGrid: byId('saveGrid'),
       saveCurrentMeta: byId('saveCurrentMeta'),
       saveCurrentTime: byId('saveCurrentTime'),
+
+      confirmLayer: byId('confirmLayer'),
+      confirmCard: byId('confirmLayer').querySelector('.confirm-card'),
+      confirmTitle: byId('confirmTitle'),
+      confirmBody: byId('confirmBody'),
+      confirmCancel: byId('confirmCancel'),
+      confirmOk: byId('confirmOk'),
 
       joystick: byId('joystick'),
       toast: byId('toast'),
@@ -87,6 +94,7 @@ export class UI {
     this.atlasOpen = false;
     this.settingsOpen = false;
     this.saveOpen = false;
+    this.confirmOpen = false;
     this.activePoi = null;
     this.lastProgress = -1;
     this.toastTimer = null;
@@ -124,6 +132,10 @@ export class UI {
       if (button.dataset.action === 'load') this.callbacks.onLoadSlot?.(index);
     });
 
+    el.confirmCancel.addEventListener('click', () => this.closeConfirm(false));
+    el.confirmOk.addEventListener('click', () => this.closeConfirm(true));
+    el.confirmLayer.querySelector('[data-close-confirm]')?.addEventListener('click', () => this.closeConfirm(false));
+
     el.sheetClose.addEventListener('click', () => {
       if (this.canDismissPoi()) this.closePoi();
     });
@@ -154,7 +166,10 @@ export class UI {
 
     document.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape') return;
-      if (this.poiOpen) {
+      if (this.confirmOpen) {
+        event.preventDefault();
+        this.closeConfirm(false);
+      } else if (this.poiOpen) {
         event.preventDefault();
         this.closePoi();
       } else if (this.atlasOpen) {
@@ -173,6 +188,7 @@ export class UI {
     el.atlasLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.atlasCard));
     el.settingsLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.settingsCard));
     el.saveLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.saveCard));
+    el.confirmLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.confirmCard));
   }
 
   setLoading(progress) {
@@ -591,6 +607,64 @@ export class UI {
     this.closeSystemLayer(this.el.saveLayer);
     this.callbacks.onSaveClose?.();
     this.restoreFocus();
+  }
+
+  /**
+   * In-game confirmation. Avoids window.confirm, which some mobile
+   * in-app browsers suppress silently.
+   * @returns {Promise<boolean>}
+   */
+  confirm({ title = '确认操作', body = '', okText = '确认', cancelText = '取消' } = {}) {
+    if (this.confirmOpen) return Promise.resolve(false);
+
+    return new Promise((resolve) => {
+      const { el } = this;
+      this.confirmOpen = true;
+      this.confirmResolve = resolve;
+      this.confirmFocus = document.activeElement;
+      el.confirmTitle.textContent = title;
+      el.confirmBody.textContent = body;
+      el.confirmOk.textContent = okText;
+      el.confirmCancel.textContent = cancelText;
+      el.confirmLayer.hidden = false;
+      el.confirmLayer.setAttribute('aria-hidden', 'false');
+      window.clearTimeout(this.confirmHideTimer);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => el.confirmLayer.classList.add('is-open'));
+      });
+      window.setTimeout(() => el.confirmCancel.focus({ preventScroll: true }), 220);
+    });
+  }
+
+  closeConfirm(result) {
+    if (!this.confirmOpen) return;
+    const { el } = this;
+    this.confirmOpen = false;
+    el.confirmLayer.classList.remove('is-open');
+    el.confirmLayer.setAttribute('aria-hidden', 'true');
+    this.confirmHideTimer = window.setTimeout(() => {
+      el.confirmLayer.hidden = true;
+    }, 300);
+
+    if (this.confirmFocus instanceof HTMLElement && document.contains(this.confirmFocus)) {
+      this.confirmFocus.focus({ preventScroll: true });
+    }
+
+    const resolve = this.confirmResolve;
+    this.confirmResolve = null;
+    resolve?.(result);
+  }
+
+  resetQuizView() {
+    const { el } = this;
+    this.activePoi = null;
+    el.quizBlock.classList.remove('is-earned');
+    el.quizState.textContent = '未完成';
+    el.quizOptions.replaceChildren();
+    el.quizFeedback.hidden = true;
+    el.quizFeedback.className = 'quiz-feedback';
+    el.badgeReward.hidden = true;
+    el.sheetDoneLabel.textContent = '继续漫游';
   }
 
   openSystemLayer(layer, focusTarget) {

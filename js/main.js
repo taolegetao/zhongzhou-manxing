@@ -1,11 +1,11 @@
-import { AXIS, HIT_SLOP, PLAYER, VIEW, WORLD } from './config.js';
+import { HIT_SLOP, PLAYER, VIEW, WORLD } from './config.js';
 import { POIS } from './data/pois.js';
 import { ATLAS_BADGES } from './data/atlas.js';
 import { AssetStore } from './core/assets.js';
 import { Camera, clamp } from './core/camera.js';
 import { InputController } from './core/input.js';
 import { Player } from './core/player.js';
-import { formatSavedAt, loadProgress, saveProgress } from './core/progress.js';
+import { formatSavedAt, loadProgress, loadSlots, saveProgress, saveSlot } from './core/progress.js';
 import { SceneRenderer } from './render/scene.js';
 import { UI } from './ui/ui.js';
 
@@ -42,7 +42,10 @@ const ui = new UI({
   onSettingsClose: closeSettings,
   onAtlasOpen: openAtlas,
   onAtlasClose: closeAtlas,
-  onSave: () => saveGame(true),
+  onSaveOpen: openSaveSlots,
+  onSaveSlot: saveToSlot,
+  onLoadSlot: loadFromSlot,
+  onSaveClose: closeSaveSlots,
   onToggleSetting: toggleSetting,
   onQuizAnswer: answerQuiz,
   onBubbleClick: () => {
@@ -125,7 +128,7 @@ function tick(now) {
     scene.render({
       camera,
       player,
-      nearPois: getNearPois(player.x, player.y),
+      nearPois: state.nearPoi ? [state.nearPoi] : [],
       nearestPoi: state.nearPoi,
       time: now,
       showHints: false,
@@ -149,18 +152,6 @@ function update(dt) {
   } else {
     ui.hideBubble();
   }
-
-  ui.setProgress(progressFromY(player.y));
-}
-
-function getNearPois(x, y) {
-  const result = [];
-  for (const poi of POIS) {
-    if (distanceToBox(x, y, poi.hitbox) <= VIEW.proximity + 90) {
-      result.push(poi);
-    }
-  }
-  return result;
 }
 
 function findNearestPoi(x, y) {
@@ -182,11 +173,6 @@ function distanceToBox(x, y, box) {
   const dx = Math.max(box.x - x, 0, x - (box.x + box.width));
   const dy = Math.max(box.y - y, 0, y - (box.y + box.height));
   return Math.hypot(dx, dy);
-}
-
-function progressFromY(y) {
-  const total = AXIS.southY - AXIS.northY;
-  return clamp(((AXIS.southY - y) / total) * 100, 0, 100);
 }
 
 function startGame() {
@@ -212,12 +198,17 @@ function openPoi(poi) {
 }
 
 function closePoi() {
+  const poiName = state.activePoi?.name;
+  const allClosed = state.badges.size === POIS.length;
   state.modal = false;
   state.activePoi = null;
   input.setEnabled(state.started);
   if (state.pendingBadgeToast) {
     state.pendingBadgeToast = false;
-    ui.toast('永定门徽章已点亮 · 进度已保存', 3000);
+    ui.toast(
+      allClosed ? '4 个点位全部闭环 · 进度已保存' : `${poiName}徽章已点亮 · 进度已保存`,
+      3000,
+    );
   }
 }
 
@@ -262,6 +253,66 @@ function openSettings() {
 function closeSettings() {
   state.modal = false;
   input.setEnabled(state.started);
+}
+
+function openSaveSlots() {
+  if (!state.started || state.modal) return;
+  state.modal = true;
+  input.setEnabled(false);
+  player.stop();
+  ui.hideBubble();
+  ui.openSaveSlots(loadSlots());
+}
+
+function closeSaveSlots() {
+  state.modal = false;
+  input.setEnabled(state.started);
+}
+
+function saveToSlot(index) {
+  if (!player) return;
+  const slots = loadSlots();
+  if (slots[index] && !window.confirm(`存档 ${index + 1} 已有进度，确定覆盖吗？`)) return;
+
+  const updated = saveSlot(index, {
+    badges: state.badges,
+    player,
+    settings: state.settings,
+  });
+  ui.renderSaveSlots(updated);
+  saveGame(false);
+  ui.toast(`已保存到存档 ${String(index + 1).padStart(2, '0')}`, 2000);
+}
+
+function loadFromSlot(index) {
+  const slot = loadSlots()[index];
+  if (!slot) return;
+  if (!window.confirm('读取存档会覆盖当前未保存的游玩进度，确定继续吗？')) return;
+
+  applySnapshot(slot);
+  ui.closeSaveSlots();
+  ui.toast(`已读取存档 ${String(index + 1).padStart(2, '0')}`, 2200);
+}
+
+function applySnapshot(snapshot) {
+  if (!snapshot) return;
+  state.badges = new Set(snapshot.badges.filter((id) => ATLAS_BADGES.some((badge) => badge.id === id)));
+  state.settings = {
+    reduceMotion: Boolean(snapshot.settings?.reduceMotion),
+    largeText: Boolean(snapshot.settings?.largeText),
+  };
+  applySettings();
+
+  if (snapshot.player && player) {
+    player.x = clamp(snapshot.player.x, PLAYER.bounds.minX, PLAYER.bounds.maxX);
+    player.y = clamp(snapshot.player.y, PLAYER.bounds.minY, PLAYER.bounds.maxY);
+    camera.snapTo(player.x, player.y + VIEW.lookAheadY);
+    input.reset();
+  }
+
+  ui.setBadgeCount(state.badges.size);
+  ui.setSavedAt(snapshot.savedAt);
+  saveGame(false);
 }
 
 function toggleSetting(key, value) {

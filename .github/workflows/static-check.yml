@@ -39,5 +39,7 @@ jobs:
           test -f assets/character/hero.png
           test -f assets/covers/tiantan.jpg
           test -f assets/covers/yongdingmen.jpg
+          test -f assets/covers/zhengyangmen.jpg
+          test -f assets/covers/gugong.jpg
           test -f js/data/pois.js
           echo "static files OK"

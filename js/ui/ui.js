@@ -32,6 +32,12 @@ export class UI {
       bubble: byId('poiBubble'),
       bubbleText: byId('bubbleText'),
 
+      saveLayer: byId('saveLayer'),
+      saveCard: byId('saveLayer').querySelector('.save-card'),
+      saveClose: byId('saveClose'),
+      saveDone: byId('saveDone'),
+      saveGrid: byId('saveGrid'),
+
       joystick: byId('joystick'),
       toast: byId('toast'),
 
@@ -78,6 +84,7 @@ export class UI {
     this.poiOpen = false;
     this.atlasOpen = false;
     this.settingsOpen = false;
+    this.saveOpen = false;
     this.activePoi = null;
     this.lastProgress = -1;
     this.toastTimer = null;
@@ -99,9 +106,21 @@ export class UI {
     });
 
     el.settingsBtn.addEventListener('click', () => this.callbacks.onSettingsOpen?.());
-    el.saveBtn.addEventListener('click', () => this.callbacks.onSave?.());
+    el.saveBtn.addEventListener('click', () => this.callbacks.onSaveOpen?.());
     el.atlasBtn.addEventListener('click', () => this.callbacks.onAtlasOpen?.());
     el.bubble.addEventListener('click', () => this.callbacks.onBubbleClick?.());
+
+    el.saveClose.addEventListener('click', () => this.closeSaveSlots());
+    el.saveDone.addEventListener('click', () => this.closeSaveSlots());
+    el.saveLayer.querySelector('[data-close-save]')?.addEventListener('click', () => this.closeSaveSlots());
+    el.saveGrid.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const index = Number(button.dataset.slot);
+      if (!Number.isInteger(index)) return;
+      if (button.dataset.action === 'save') this.callbacks.onSaveSlot?.(index);
+      if (button.dataset.action === 'load') this.callbacks.onLoadSlot?.(index);
+    });
 
     el.sheetClose.addEventListener('click', () => {
       if (this.canDismissPoi()) this.closePoi();
@@ -142,12 +161,16 @@ export class UI {
       } else if (this.settingsOpen) {
         event.preventDefault();
         this.closeSettings();
+      } else if (this.saveOpen) {
+        event.preventDefault();
+        this.closeSaveSlots();
       }
     });
 
     el.sheetLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.poiSheet));
     el.atlasLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.atlasCard));
     el.settingsLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.settingsCard));
+    el.saveLayer.addEventListener('keydown', (event) => this.trapFocus(event, el.saveCard));
   }
 
   setLoading(progress) {
@@ -177,15 +200,14 @@ export class UI {
     }, 560);
   }
 
-  setProgress(value) {
-    const percent = Math.min(100, Math.max(0, value));
+  setLoopProgress(count, total = this.totalBadges) {
+    const safeTotal = Math.max(1, total);
+    const safeCount = Math.min(safeTotal, Math.max(0, count));
+    const percent = (safeCount / safeTotal) * 100;
     this.el.axisFill.style.width = `${percent}%`;
     this.el.axisPin.style.left = `${percent}%`;
-    const rounded = Math.round(percent);
-    if (rounded !== this.lastProgress) {
-      this.el.axisPercent.textContent = `中轴 ${rounded}%`;
-      this.lastProgress = rounded;
-    }
+    this.el.axisPercent.textContent = `${safeCount} / ${safeTotal}`;
+    this.el.axisPercent.setAttribute('title', `已完成 ${safeCount} 个游玩闭环`);
   }
 
   setBadgeCount(count) {
@@ -193,6 +215,7 @@ export class UI {
     this.el.atlasCount.textContent = String(safe);
     this.el.atlasCount.classList.toggle('is-zero', safe === 0);
     this.el.atlasBtn.classList.toggle('has-new', safe > 0);
+    this.setLoopProgress(safe, this.totalBadges);
 
     if (this.lastBadgeCount >= 0 && safe > this.lastBadgeCount) {
       this.el.atlasBtn.classList.remove('is-bump');
@@ -471,6 +494,69 @@ export class UI {
     this.settingsOpen = false;
     this.closeSystemLayer(this.el.settingsLayer);
     this.callbacks.onSettingsClose?.();
+    this.restoreFocus();
+  }
+
+  openSaveSlots(slots) {
+    if (this.saveOpen) return;
+    const { el } = this;
+    this.saveOpen = true;
+    this.savedFocus = document.activeElement;
+    this.renderSaveSlots(slots);
+    this.openSystemLayer(el.saveLayer, el.saveGrid.querySelector('.slot-save') || el.saveDone);
+  }
+
+  renderSaveSlots(slots) {
+    const { el } = this;
+    el.saveGrid.replaceChildren();
+
+    slots.forEach((slot, index) => {
+      const occupied = Boolean(slot?.savedAt);
+      const node = document.createElement('div');
+      node.className = `save-slot ${occupied ? 'is-occupied' : 'is-empty'}`;
+
+      const head = document.createElement('div');
+      head.className = 'save-slot-head';
+      const label = document.createElement('strong');
+      label.textContent = `存档 ${String(index + 1).padStart(2, '0')}`;
+      const time = document.createElement('span');
+      time.textContent = occupied ? formatSavedAt(slot.savedAt) : '空存档';
+      head.append(label, time);
+
+      const meta = document.createElement('p');
+      meta.className = 'save-slot-meta';
+      const count = occupied ? slot.badges.filter((id) => ATLAS_BADGES.some((badge) => badge.id === id)).length : 0;
+      meta.textContent = occupied ? `徽章 ${count} / ${this.totalBadges} · 点击读取旧进度` : '还没有保存过进度';
+
+      const actions = document.createElement('div');
+      actions.className = 'save-slot-actions';
+
+      const saveButton = document.createElement('button');
+      saveButton.type = 'button';
+      saveButton.className = 'slot-save';
+      saveButton.dataset.action = 'save';
+      saveButton.dataset.slot = String(index);
+      saveButton.textContent = occupied ? '覆盖保存' : '保存到此';
+
+      const loadButton = document.createElement('button');
+      loadButton.type = 'button';
+      loadButton.className = 'slot-load';
+      loadButton.dataset.action = 'load';
+      loadButton.dataset.slot = String(index);
+      loadButton.textContent = '读取';
+      loadButton.disabled = !occupied;
+
+      actions.append(saveButton, loadButton);
+      node.append(head, meta, actions);
+      el.saveGrid.append(node);
+    });
+  }
+
+  closeSaveSlots() {
+    if (!this.saveOpen) return;
+    this.saveOpen = false;
+    this.closeSystemLayer(this.el.saveLayer);
+    this.callbacks.onSaveClose?.();
     this.restoreFocus();
   }
 

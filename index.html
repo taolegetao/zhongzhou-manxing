@@ -31,9 +31,9 @@
 
       <div class="axis-meter" aria-hidden="true">
         <div class="axis-labels">
-          <span>永定门 · 南</span>
-          <span id="axisPercent">中轴</span>
-          <span>钟鼓楼 · 北</span>
+          <span>已闭环</span>
+          <span id="axisPercent">0 / 4</span>
+          <span>共 4 个点位</span>
         </div>
         <div class="axis-track">
           <span id="axisFill" class="axis-fill"></span>
@@ -203,10 +203,22 @@
           <input id="largeTextToggle" type="checkbox" role="switch">
         </label>
 
-        <p class="settings-meta">上次存档：<span id="lastSaved">尚未存档</span></p>
+        <p class="settings-meta">最近自动存档：<span id="lastSaved">尚未存档</span></p>
         <button id="settingsReset" class="secondary-btn" type="button">回到起点</button>
         <button id="settingsDone" class="primary-btn" type="button">返回游戏</button>
-        <p class="settings-version">中轴寻迹 · v1.2.0</p>
+        <p class="settings-version">中轴寻迹 · v1.3.0</p>
+      </article>
+    </div>
+
+    <div id="saveLayer" class="system-layer" hidden>
+      <div class="system-backdrop" data-close-save></div>
+      <article class="save-card" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
+        <button id="saveClose" class="system-close" type="button" aria-label="关闭存档">×</button>
+        <p class="system-kicker">SAVE SLOTS</p>
+        <h2 id="saveTitle">存档</h2>
+        <p class="save-intro">选择一个存档位保存当前进度，或读取旧进度。读取会覆盖当前未保存的游玩进度。</p>
+        <div id="saveGrid" class="save-grid"></div>
+        <button id="saveDone" class="primary-btn" type="button">返回游戏</button>
       </article>
     </div>
   </main>

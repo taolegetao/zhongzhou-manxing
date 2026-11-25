@@ -1,6 +1,6 @@
 /**
- * 首版试点：只开放永定门一个可交互建筑。
- * 其他中轴线建筑先以图鉴徽章的形式占位，后续再逐个补内容。
+ * 首版四个可交互点位：永定门、天坛、正阳门、故宫。
+ * 每个点位共用同一套流程：靠近气泡 → 资料卡 → 1 道答题 → 徽章入图鉴。
  */
 export const POIS = [
   {
@@ -39,6 +39,120 @@ export const POIS = [
       correct: '答对了。2004 年，永定门按清代形制原址复建。',
       wrong: '再翻翻上面的城门年表：永定门是在 2004 年复建的。',
       badgeLabel: '永定门徽章',
+    },
+  },
+  {
+    id: 'tiantan',
+    order: 2,
+    no: '02',
+    seal: '天',
+    name: '天坛',
+    en: 'Temple of Heaven',
+    kicker: '北京中轴线 · 祭天圣地',
+    accent: '#2f6172',
+    cover: './assets/covers/tiantan.jpg',
+    coverPosition: 'center 52%',
+    hitbox: { x: 590, y: 2025, width: 150, height: 195 },
+    aura: { x: 660, y: 2160, rx: 75, ry: 20 },
+    bubble: { x: 660, y: 2005 },
+    tags: ['世界文化遗产', '明永乐始建', '祭天祈谷'],
+    lead:
+      '天坛位于北京中轴线东侧，是明清两代皇帝祭天、祈谷的场所，始建于明永乐十八年（1420 年），初名“天地坛”。',
+    body:
+      '明嘉靖九年（1530 年）改称天坛，专用于祭天与祈谷。坛域原占地约 273 公顷，分内、外两坛；内坛以圜丘、祈谷坛为核心，祈年殿、皇穹宇、斋宫、神乐署等建筑沿轴线展开。1998 年列入《世界遗产名录》，是北京中轴线遗产构成要素之一。',
+    detail: {
+      type: 'timeline',
+      title: '天坛年表',
+      items: [
+        { year: '1420', label: '始建，初名天地坛' },
+        { year: '1530', label: '改称天坛，专事祭天' },
+        { year: '1998', label: '列入世界遗产名录' },
+      ],
+    },
+    quiz: {
+      question: '天坛始建于哪一年？',
+      options: ['1420 年', '1530 年', '1998 年'],
+      answer: 0,
+      hint: '看看天坛年表的第一行。',
+      correct: '答对了。天坛始建于明永乐十八年（1420 年）。',
+      wrong: '再想想年表：天坛始建于 1420 年，1530 年才改称天坛。',
+      badgeLabel: '天坛徽章',
+    },
+  },
+  {
+    id: 'zhengyangmen',
+    order: 3,
+    no: '03',
+    seal: '正',
+    name: '正阳门',
+    en: 'Zhengyangmen Gate',
+    kicker: '北京中轴线 · 京师正门',
+    accent: '#b34834',
+    cover: './assets/covers/zhengyangmen.jpg',
+    coverPosition: 'center 52%',
+    hitbox: { x: 360, y: 1800, width: 300, height: 210 },
+    aura: { x: 510, y: 1950, rx: 100, ry: 20 },
+    bubble: { x: 510, y: 1780 },
+    tags: ['京师正门', '俗称前门', '城楼与箭楼'],
+    lead:
+      '正阳门是北京内城的正南门，俗称“前门”，位于天安门广场南侧，是北京旧城的重要标志。',
+    body:
+      '正阳门始建于明永乐年间，正统年间改称正阳门，由城楼、箭楼和瓮城组成，兼具礼仪与防御功能。现存的城楼与箭楼是明清北京城正门格局的重要见证，也是中轴线上的关键节点。',
+    detail: {
+      type: 'timeline',
+      title: '正阳门小史',
+      items: [
+        { year: '1419', label: '明永乐年间始建' },
+        { year: '1436', label: '正统年间改称正阳门' },
+        { year: '今天', label: '北京旧城的重要地标' },
+      ],
+    },
+    quiz: {
+      question: '正阳门在老北京更常见的俗称是什么？',
+      options: ['前门', '午门', '神武门'],
+      answer: 0,
+      hint: '“前门大街”“前门楼子”都从这里来。',
+      correct: '答对了。正阳门俗称“前门”。',
+      wrong: '再想想：正阳门就是老北京常说的“前门”。',
+      badgeLabel: '正阳门徽章',
+    },
+  },
+  {
+    id: 'gugong',
+    order: 4,
+    no: '04',
+    seal: '宫',
+    name: '故宫',
+    en: 'The Forbidden City',
+    kicker: '北京中轴线 · 宫城核心',
+    accent: '#a84431',
+    cover: './assets/covers/gugong.jpg',
+    coverPosition: 'center 50%',
+    hitbox: { x: 360, y: 920, width: 300, height: 200 },
+    aura: { x: 510, y: 1060, rx: 110, ry: 24 },
+    bubble: { x: 510, y: 900 },
+    tags: ['世界文化遗产', '明永乐建成', '前朝后寝'],
+    lead:
+      '故宫是明清两代皇家宫殿，旧称紫禁城，建成于明永乐十八年（1420 年），是世界上现存规模最大、保存最完整的古代木构宫殿群。',
+    body:
+      '故宫占地约 72 万平方米，沿中轴线对称布局，午门、三大殿、后三宫、御花园、神武门依次展开，体现“前朝后寝、左祖右社”的礼制秩序。1987 年列入《世界遗产名录》，是北京中轴线的核心遗产构成要素。',
+    detail: {
+      type: 'timeline',
+      title: '故宫年表',
+      items: [
+        { year: '1406', label: '明永乐年间开始营建' },
+        { year: '1420', label: '建成，成为皇宫' },
+        { year: '1987', label: '列入世界遗产名录' },
+      ],
+    },
+    quiz: {
+      question: '故宫建成于哪一年？',
+      options: ['1420 年', '1553 年', '2004 年'],
+      answer: 0,
+      hint: '看看“故宫年表”的第二行。',
+      correct: '答对了。故宫建成于明永乐十八年（1420 年）。',
+      wrong: '再翻翻年表：故宫在 1420 年建成。',
+      badgeLabel: '故宫徽章',
     },
   },
 ];

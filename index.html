@@ -206,7 +206,7 @@
         <p class="settings-meta">最近自动存档：<span id="lastSaved">尚未存档</span></p>
         <button id="settingsReset" class="secondary-btn" type="button">回到起点</button>
         <button id="settingsDone" class="primary-btn" type="button">返回游戏</button>
-        <p class="settings-version">中轴寻迹 · v1.3.0</p>
+        <p class="settings-version">中轴寻迹 · v1.3.1</p>
       </article>
     </div>
 
@@ -216,7 +216,12 @@
         <button id="saveClose" class="system-close" type="button" aria-label="关闭存档">×</button>
         <p class="system-kicker">SAVE SLOTS</p>
         <h2 id="saveTitle">存档</h2>
-        <p class="save-intro">选择一个存档位保存当前进度，或读取旧进度。读取会覆盖当前未保存的游玩进度。</p>
+        <p class="save-intro">当前进度会自动保存。读取旧存档会替换当前进度，覆盖前需要确认。</p>
+        <div id="saveCurrent" class="save-current">
+          <span class="save-current-label">当前游玩</span>
+          <strong id="saveCurrentMeta">0 / 4 · 永定门附近</strong>
+          <small id="saveCurrentTime">尚未自动保存</small>
+        </div>
         <div id="saveGrid" class="save-grid"></div>
         <button id="saveDone" class="primary-btn" type="button">返回游戏</button>
       </article>

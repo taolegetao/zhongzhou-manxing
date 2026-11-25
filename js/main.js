@@ -261,7 +261,15 @@ function openSaveSlots() {
   input.setEnabled(false);
   player.stop();
   ui.hideBubble();
-  ui.openSaveSlots(loadSlots());
+  ui.openSaveSlots(loadSlots(), currentProgress());
+}
+
+function currentProgress() {
+  return {
+    badges: state.badges,
+    player,
+    savedAt: state.savedAt,
+  };
 }
 
 function closeSaveSlots() {
@@ -274,20 +282,30 @@ function saveToSlot(index) {
   const slots = loadSlots();
   if (slots[index] && !window.confirm(`存档 ${index + 1} 已有进度，确定覆盖吗？`)) return;
 
-  const updated = saveSlot(index, {
+  const result = saveSlot(index, {
     badges: state.badges,
     player,
     settings: state.settings,
   });
-  ui.renderSaveSlots(updated);
+  if (!result.ok) {
+    ui.toast('存档失败，请检查浏览器存储空间', 2600);
+    return;
+  }
+
   saveGame(false);
+  ui.renderSaveSlots(result.slots, currentProgress());
   ui.toast(`已保存到存档 ${String(index + 1).padStart(2, '0')}`, 2000);
 }
 
 function loadFromSlot(index) {
   const slot = loadSlots()[index];
   if (!slot) return;
-  if (!window.confirm('读取存档会覆盖当前未保存的游玩进度，确定继续吗？')) return;
+
+  const slotCount = slot.badges.filter((id) => ATLAS_BADGES.some((badge) => badge.id === id)).length;
+  const currentCount = state.badges.size;
+  if (!window.confirm(`读取存档 ${index + 1}（${slotCount} / ${POIS.length}）会替换当前 ${currentCount} / ${POIS.length} 的进度，确定继续吗？`)) {
+    return;
+  }
 
   applySnapshot(slot);
   ui.closeSaveSlots();

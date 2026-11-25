@@ -37,6 +37,8 @@ export class UI {
       saveClose: byId('saveClose'),
       saveDone: byId('saveDone'),
       saveGrid: byId('saveGrid'),
+      saveCurrentMeta: byId('saveCurrentMeta'),
+      saveCurrentTime: byId('saveCurrentTime'),
 
       joystick: byId('joystick'),
       toast: byId('toast'),
@@ -497,17 +499,29 @@ export class UI {
     this.restoreFocus();
   }
 
-  openSaveSlots(slots) {
+  openSaveSlots(slots, current) {
     if (this.saveOpen) return;
     const { el } = this;
     this.saveOpen = true;
     this.savedFocus = document.activeElement;
-    this.renderSaveSlots(slots);
+    this.currentSave = current;
+    this.renderSaveSlots(slots, current);
     this.openSystemLayer(el.saveLayer, el.saveGrid.querySelector('.slot-save') || el.saveDone);
   }
 
-  renderSaveSlots(slots) {
+  renderSaveSlots(slots, current = this.currentSave) {
     const { el } = this;
+    const active = document.activeElement;
+    const activeSlot = active?.dataset?.slot;
+    const activeAction = active?.dataset?.action;
+    const currentBadges = current?.badges?.size ?? 0;
+    const currentTotal = this.totalBadges;
+    const currentLocation = this.locationLabel(current?.player);
+    el.saveCurrentMeta.textContent = `徽章 ${currentBadges} / ${currentTotal} · ${currentLocation}`;
+    el.saveCurrentTime.textContent = current?.savedAt
+      ? `自动保存于 ${formatSavedAt(current.savedAt)}`
+      : '尚未自动保存';
+
     el.saveGrid.replaceChildren();
 
     slots.forEach((slot, index) => {
@@ -525,8 +539,12 @@ export class UI {
 
       const meta = document.createElement('p');
       meta.className = 'save-slot-meta';
-      const count = occupied ? slot.badges.filter((id) => ATLAS_BADGES.some((badge) => badge.id === id)).length : 0;
-      meta.textContent = occupied ? `徽章 ${count} / ${this.totalBadges} · 点击读取旧进度` : '还没有保存过进度';
+      const count = occupied
+        ? slot.badges.filter((id) => ATLAS_BADGES.some((badge) => badge.id === id)).length
+        : 0;
+      meta.textContent = occupied
+        ? `徽章 ${count} / ${this.totalBadges} · ${this.locationLabel(slot.player)}`
+        : '还没有保存过进度';
 
       const actions = document.createElement('div');
       actions.className = 'save-slot-actions';
@@ -550,6 +568,21 @@ export class UI {
       node.append(head, meta, actions);
       el.saveGrid.append(node);
     });
+
+    if (activeSlot !== undefined && activeAction) {
+      el.saveGrid
+        .querySelector(`[data-slot="${activeSlot}"][data-action="${activeAction}"]`)
+        ?.focus({ preventScroll: true });
+    }
+  }
+
+  locationLabel(player) {
+    if (!player || !Number.isFinite(player.y)) return '位置未知';
+    if (player.y >= 2150) return '永定门附近';
+    if (player.y >= 2025) return player.x >= 580 ? '天坛附近' : '永定门附近';
+    if (player.y >= 1800) return '正阳门附近';
+    if (player.y >= 900) return '故宫附近';
+    return '中轴途中';
   }
 
   closeSaveSlots() {

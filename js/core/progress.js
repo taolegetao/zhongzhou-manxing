@@ -47,7 +47,7 @@ export function loadSlots() {
 
 export function saveSlot(index, { badges, player, settings }) {
   if (!Number.isInteger(index) || index < 0 || index >= SLOT_COUNT) {
-    return loadSlots();
+    return { slots: loadSlots(), ok: false };
   }
 
   const slots = loadSlots();
@@ -56,10 +56,10 @@ export function saveSlot(index, { badges, player, settings }) {
 
   try {
     localStorage.setItem(SLOTS_KEY, JSON.stringify(slots));
+    return { slots, ok: true };
   } catch {
-    return loadSlots();
+    return { slots: loadSlots(), ok: false };
   }
-  return slots;
 }
 
 export function clearProgress() {

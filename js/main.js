@@ -1,5 +1,5 @@
 import { HIT_SLOP, PLAYER, VIEW, WORLD } from './config.js?v=1.3.2';
-import { POIS } from './data/pois.js?v=1.3.2';
+import { POIS } from './data/pois.js?v=1.5.0';
 import { ATLAS_BADGES } from './data/atlas.js?v=1.3.2';
 import { AssetStore } from './core/assets.js?v=1.3.2';
 import { Camera, clamp } from './core/camera.js?v=1.3.2';

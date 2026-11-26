@@ -17,6 +17,11 @@ export const POIS = [
     hitbox: { x: 340, y: 1386, width: 330, height: 132 },
     aura: { x: 512, y: 1502, rx: 150, ry: 26 },
     bubble: { x: 512, y: 1374 },
+    minigame: {
+      href: './games/yongdingmen/index.html',
+      label: '走进《永定门修复记》',
+      desc: '左右拖动，接住城砖，点亮城门',
+    },
     tags: ['南端起点', '外城最大城门', '2004 年复建'],
     lead:
       '永定门是北京中轴线的南端起点，寓意“永远安定”。始建于明嘉靖三十二年（1553 年），是老北京外城七门中规模最大的城门。',

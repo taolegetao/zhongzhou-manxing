@@ -7,4 +7,5 @@ export const ATLAS_BADGES = [
   { id: 'tiantan', name: '天坛', seal: '天', hint: '祭天圣地' },
   { id: 'zhengyangmen', name: '正阳门', seal: '正', hint: '京师正门' },
   { id: 'gugong', name: '故宫', seal: '宫', hint: '宫城核心' },
+  { id: 'zhonggulou', name: '钟鼓楼', seal: '鼓', hint: '报时中心' },
 ];

@@ -64,6 +64,7 @@ export class UI {
       sheetIntro: byId('sheetIntro'),
       sheetTags: byId('sheetTags'),
       sheetDetail: byId('sheetDetail'),
+      sheetGame: byId('sheetGame'),
       sheetBody: byId('sheetBody'),
       quizBlock: byId('quizBlock'),
       quizState: byId('quizState'),
@@ -309,6 +310,7 @@ export class UI {
     }
 
     this.renderDetail(poi.detail);
+    this.renderGame(poi);
     this.renderQuiz(poi, earned);
 
     el.sheetLayer.hidden = false;
@@ -433,6 +435,67 @@ export class UI {
     // 触屏在 pointerup 后会补发一次 click。介绍卡恰好在手指下方出现时，
     // 这次 click 会误触背景关闭，所以给刚打开的卡片一个很短的防误触窗口。
     return performance.now() >= this.poiGuardUntil;
+  }
+
+
+  renderGame(poi) {
+    const box = this.el.sheetGame;
+    if (!box) return;
+    box.replaceChildren();
+    const game = poi.minigame;
+    if (!game) {
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'game-entry';
+
+    const k = document.createElement('span');
+    k.className = 'game-entry-kicker';
+    k.textContent = '可以玩';
+
+    const t = document.createElement('span');
+    t.className = 'game-entry-title';
+    t.textContent = game.label;
+
+    const d = document.createElement('span');
+    d.className = 'game-entry-desc';
+    d.textContent = game.desc || '';
+
+    btn.append(k, t, d);
+    btn.addEventListener('click', () => this.openGame(game));
+    box.append(btn);
+  }
+
+  openGame(game) {
+    const layer = document.getElementById('gameLayer');
+    const frame = document.getElementById('gameFrame');
+    const title = document.getElementById('gameTitle');
+    if (!layer || !frame) {
+      window.open(game.href, '_blank', 'noopener');
+      return;
+    }
+    if (!this.gameBound) {
+      this.gameBound = true;
+      const close = document.getElementById('gameClose');
+      if (close) close.addEventListener('click', () => this.closeGame());
+    }
+    if (title) title.textContent = game.label;
+    frame.src = game.href;
+    layer.hidden = false;
+    document.body.classList.add('game-open');
+  }
+
+  closeGame() {
+    const layer = document.getElementById('gameLayer');
+    const frame = document.getElementById('gameFrame');
+    if (!layer || !frame) return;
+    layer.hidden = true;
+    frame.src = 'about:blank';
+    document.body.classList.remove('game-open');
   }
 
   closePoi() {

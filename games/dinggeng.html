@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#140f18">
+<title>定更 · 北京鼓楼</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23140f18'/><circle cx='16' cy='16' r='9' fill='none' stroke='%23a8402c' stroke-width='3'/><circle cx='16' cy='16' r='3' fill='%23e0b464'/></svg>">
+<style>
+  :root{
+    --ink:#e8dfc8;
+    --dim:rgba(232,223,200,.60);
+    --copper:#e0b464;
+    --fire:#f08a3c;
+    --zhu:#c15532;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;background:#0c0810;}
+  body{
+    font-family:"Songti SC","STSong","SimSun","Noto Serif SC","Source Han Serif SC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    -webkit-text-size-adjust:100%;
+    user-select:none;-webkit-user-select:none;
+    position:relative;
+  }
+  #c{position:fixed;inset:0;display:block;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;}
+
+  .screen{
+    position:fixed;inset:0;z-index:10;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:34px 26px;text-align:center;
+    background:radial-gradient(130% 80% at 50% 42%,
+      rgba(14,9,16,.86) 0%,
+      rgba(10,7,12,.94) 55%,
+      rgba(6,4,8,.975) 100%);
+    animation:fadeIn .5s ease both;
+  }
+  .screen.on{display:flex;}
+  @media (prefers-reduced-motion: reduce){ .screen{animation:none;} }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .seal{
+    position:absolute;top:calc(50% - 170px);right:34px;
+    width:38px;height:52px;
+    display:flex;align-items:center;justify-content:center;
+    border:1.6px solid var(--zhu);border-radius:2px;
+    color:var(--zhu);font-size:15px;line-height:1.0;
+    letter-spacing:2px;writing-mode:vertical-rl;text-orientation:upright;
+    opacity:.85;
+  }
+
+  h1{
+    font-weight:400;font-size:clamp(34px,11vw,56px);
+    letter-spacing:.30em;text-indent:.30em;color:#f4ecdc;
+    text-shadow:0 0 24px rgba(224,180,100,.26), 0 0 60px rgba(240,138,60,.12);
+  }
+  .sub{margin-top:15px;font-size:12px;letter-spacing:.42em;text-indent:.42em;color:var(--copper);opacity:.85;}
+  .poem{margin-top:28px;font-size:14px;line-height:2.2;color:var(--dim);max-width:21em;}
+  .btn{
+    margin-top:36px;padding:13px 44px;font-family:inherit;font-size:15px;
+    letter-spacing:.48em;text-indent:.48em;color:var(--copper);
+    background:transparent;border:1px solid rgba(224,180,100,.40);border-radius:2px;
+    cursor:pointer;transition:background .22s, transform .1s;
+  }
+  .btn:active{background:rgba(224,180,100,.12);transform:scale(.97);}
+  .tiny{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));font-size:11px;letter-spacing:.22em;color:rgba(232,223,200,.26);}
+
+  .rank{font-weight:400;font-size:clamp(28px,8.6vw,42px);letter-spacing:.2em;text-indent:.2em;color:#f4ecdc;
+    text-shadow:0 0 26px rgba(224,180,100,.3);}
+  .rscore{margin-top:18px;font-size:clamp(40px,13vw,60px);letter-spacing:.04em;color:var(--copper);
+    text-shadow:0 0 30px rgba(224,180,100,.26);font-variant-numeric:tabular-nums;}
+  .rscore small{display:block;margin-top:-2px;font-size:11px;letter-spacing:.4em;text-indent:.4em;color:rgba(232,223,200,.40);}
+  .stats{display:flex;gap:min(40px,9vw);margin-top:26px;}
+  .stats > div{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .stats b{font-weight:400;font-size:22px;color:#e8dfc8;font-variant-numeric:tabular-nums;}
+  .stats span{font-size:10.5px;letter-spacing:.2em;color:rgba(232,223,200,.38);}
+  .fact{margin-top:28px;max-width:23em;font-size:12px;line-height:2.0;color:rgba(232,223,200,.42);
+    padding-top:18px;border-top:1px solid rgba(232,223,200,.08);white-space:pre-line;}
+
+  #muteBtn{
+    position:fixed;top:max(14px,env(safe-area-inset-top));right:14px;
+    width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+    font-size:12px;color:rgba(232,223,200,.42);
+    border:1px solid rgba(232,223,200,.13);border-radius:2px;
+    z-index:30;cursor:pointer;transition:.2s;
+  }
+  #muteBtn.off{color:rgba(232,223,200,.16);border-color:rgba(232,223,200,.06);}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="muteBtn" title="声音">♪</div>
+
+<div class="screen on" id="scrTitle">
+  <div class="seal">定更</div>
+  <h1>定更</h1>
+  <p class="sub">北京 · 鼓楼</p>
+  <p class="poem">元明清三代，都城的时辰从这里发出。<br>一更击鼓，五更鸣钟，全城的门禁与作息<br>都听这两座楼上的声音。</p>
+  <button class="btn" id="startBtn">开 始</button>
+  <p class="tiny">上半屏撞钟 · 下半屏击鼓</p>
+</div>
+
+<div class="screen" id="scrResult">
+  <p class="sub">一夜已尽</p>
+  <h2 class="rank" id="rRank">钟鼓和鸣</h2>
+  <p class="rscore"><span id="rScore">0</span><small>今 夜 一 百 零 八 响</small></p>
+  <div class="stats">
+    <div><b id="rHits">0</b><span>应 响</span></div>
+    <div><b id="rBest">0</b><span>最高连响</span></div>
+    <div><b id="rChaos">0</b><span>乱 更</span></div>
+  </div>
+  <p class="fact" id="rFact">钟鼓楼始建于元至元九年（1272），鼓楼原名"齐政楼"，取《尚书》"璇玑玉衡，以齐七政"——七政即日月与金木水火土五星。</p>
+  <button class="btn" id="againBtn">再 来 一 夜</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* ============ 暖调色板 ============ */
+  const PAL = {
+    ink:      '#0c0810',
+    night:    '#150f1a',
+    night2:   '#1d1424',
+    night3:   '#271a2e',
+    brick:    '#464049',
+    brickLt:  '#6a6069',
+    brickDk:  '#2a2429',
+    zhu:      '#a8402c',
+    zhuLt:    '#c45532',
+    zhuDk:    '#632016',
+    fire:     '#d4541f',
+    fireLt:   '#f09040',
+    copper:   '#b8873f',
+    copperLt: '#e6bc6a',
+    copperDk: '#6b4a1e',
+    tile:     '#2c4a3c',
+    tileLt:   '#3f6a54',
+    yue:      '#e8dfc8',
+    smoke:    '#8a7b80',
+    dawn:     '#d8894a'
+  };
+
+  /* ============ 像素画布 ============ */
+  const outCvs = document.getElementById('c');
+  const octx = outCvs.getContext('2d', { alpha: false });
+  const pcvs = document.createElement('canvas');
+  let ctx = null;
+
+  let S = 2, W = 195, H = 422, DPR = 1;
+  let BOX = { x: 0, y: 0, w: 0, h: 0 };
+  let cx = 0, AXIS_TOP = 0, AXIS_BOT = 0;
+  let RING_BELL = { x: 0, y: 0, r: 0 };
+  let RING_DRUM = { x: 0, y: 0, r: 0 };
+  let stars = [];
+
+  function layout() {
+    cx = W * 0.5;
+    // 判定圈放在中段：钟圈在上半屏，鼓圈在下半屏，与输入分区一致
+    RING_BELL = { x: cx, y: H * 0.400, r: Math.max(10, W * 0.070) };
+    RING_DRUM = { x: cx, y: H * 0.560, r: Math.max(11, W * 0.078) };
+    AXIS_TOP = H * 0.08;
+    AXIS_BOT = H * 0.96;
+  }
+
+  function makeStars() {
+    stars = [];
+    const n = Math.round((W * H) / 1100);
+    for (let i = 0; i < n; i++) {
+      stars.push({
+        x: Math.floor(Math.random() * W),
+        y: Math.floor(Math.random() * H * 0.55),
+        ph: Math.random() * TAU,
+        sp: 0.5 + Math.random() * 1.3,
+        a: 0.2 + Math.random() * 0.55
+      });
+    }
+  }
+
+  function resize() {
+    const cw = window.innerWidth, ch = window.innerHeight;
+    DPR = Math.min(window.devicePixelRatio || 1, 3);
+    const stageW = Math.min(cw, Math.round(ch * 0.62));
+    S = 2;
+    while (stageW / S > 220) S++;
+    const AW = Math.max(120, Math.floor(stageW / S));
+    const AH = Math.max(200, Math.floor(ch / S));
+    W = AW; H = AH;
+    BOX.w = AW * S; BOX.h = AH * S;
+    BOX.x = Math.round((cw - BOX.w) / 2);
+    BOX.y = Math.round((ch - BOX.h) / 2);
+
+    pcvs.width = AW; pcvs.height = AH;
+    ctx = pcvs.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    outCvs.width = Math.round(cw * DPR);
+    outCvs.height = Math.round(ch * DPR);
+    outCvs.style.width = cw + 'px';
+    outCvs.style.height = ch + 'px';
+    octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    octx.imageSmoothingEnabled = false;
+
+    layout();
+    makeStars();
+    makeScenery();
+  }
+
+  const toSX = (v) => BOX.x + v * S;
+  const toSY = (v) => BOX.y + v * S;
+
+  /* ============ 音频 ============ */
+  let actx = null, master = null;
+  let muted = false;
+  const setMuteEl = document.getElementById('muteBtn');
+
+  function initAudio() {
+    if (actx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try { actx = new AC(); } catch (e) { return; }
+    master = actx.createGain();
+    master.gain.value = 0.85;
+    master.connect(actx.destination);
+  }
+  const resumeAudio = () => { if (actx && actx.state === 'suspended') actx.resume(); };
+
+  function noiseBurst(t, dur, freq, gain) {
+    const len = Math.floor(actx.sampleRate * dur);
+    const buf = actx.createBuffer(1, len, actx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = actx.createBufferSource();
+    src.buffer = buf;
+    const bp = actx.createBiquadFilter();
+    bp.type = 'lowpass';
+    bp.frequency.setValueAtTime(freq, t);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(master);
+    src.start(t); src.stop(t + dur + 0.02);
+  }
+
+  // 鼓：低频下坠 + 皮面闷响
+  function playDrum(strong) {
+    if (!actx || muted) return;
+    const t = actx.currentTime;
+    const o = actx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(strong ? 128 : 104, t);
+    o.frequency.exponentialRampToValueAtTime(44, t + 0.34);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.42, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.55);
+    noiseBurst(t, 0.10, 900, 0.10);
+  }
+
+  // 钟：铜锡合金的非谐分音，长余韵
+  function playBell(strong) {
+    if (!actx || muted) return;
+    const t = actx.currentTime;
+    const f0 = strong ? 118 : 138;
+    const parts = [[1, 0.30], [2.02, 0.16], [2.41, 0.11], [3.03, 0.07], [4.21, 0.045]];
+    const dur = strong ? 4.2 : 3.0;
+    for (let i = 0; i < parts.length; i++) {
+      const o = actx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f0 * parts[i][0], t);
+      const g = actx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(parts[i][1] * (strong ? 1 : 0.7), t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur * (1 - i * 0.12));
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + dur + 0.1);
+    }
+  }
+
+  // 铙（刻漏到刻击铙）
+  function playNao() {
+    if (!actx || muted) return;
+    const t = actx.currentTime;
+    const o = actx.createOscillator();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(520, t);
+    o.frequency.exponentialRampToValueAtTime(470, t + 0.5);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.07, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.75);
+  }
+
+  // 乱更：闷而错的声音
+  function playChaos() {
+    if (!actx || muted) return;
+    const t = actx.currentTime;
+    [150, 141].forEach((f, i) => {
+      const o = actx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f, t);
+      o.frequency.exponentialRampToValueAtTime(f * 0.6, t + 0.22);
+      const g = actx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.18, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + 0.34);
+    });
+  }
+
+  setMuteEl.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    muted = !muted;
+    setMuteEl.classList.toggle('off', muted);
+    setMuteEl.textContent = muted ? '×' : '♪';
+    if (!muted) { resumeAudio(); playBell(false); }
+  });
+
+  /* ============ 时钟 ============ */
+  let timeOffset = 0, hiddenAt = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hiddenAt = performance.now();
+    else if (hiddenAt) { timeOffset += (performance.now() - hiddenAt) / 1000; hiddenAt = 0; }
+  });
+  const now = () => performance.now() / 1000 - timeOffset;
+
+  /* ============ 临时景（屋顶剪影） ============ */
+  let sceneryCanvas = null;
+  function makeScenery() {
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    g.imageSmoothingEnabled = false;
+
+    const hz = Math.round(H * 0.80);
+    let seed = 20241126;
+    const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+
+    // 远处的屋脊剪影
+    for (let i = 0; i < 26; i++) {
+      const x = rnd() * W;
+      const w = 8 + rnd() * 16;
+      const h = 6 + rnd() * 12;
+      const y = hz - rnd() * 8;
+      g.fillStyle = '#161019';
+      g.fillRect(x, y - h, w, h);
+      g.fillRect(x + 1, y - h - 2, w - 2, 2);
+    }
+    g.fillStyle = '#120d16';
+    g.fillRect(0, hz, W, H - hz);
+    sceneryCanvas = c;
+  }
+
+  /* ============ 谱面 ============ */
+  const TEMPO = { jin: 0.255, man: 0.620, zhong: 0.420 };   // 紧十八 / 慢十八 / 不紧不慢
+  const RULE_TEXT = {
+    1: '鼓钟齐鸣 · 先鼓后钟',
+    2: '只撞钟 · 不击鼓',
+    3: '只撞钟 · 不击鼓',
+    4: '只撞钟 · 不击鼓',
+    5: '鼓钟齐鸣 · 先鼓后钟'
+  };
+  const WAVE_DEF = [
+    { id: 1, name: '一更 · 定更', hours: '戌时 十九至二十一', segs: [['drum', 'jin', 18], ['bell', 'man', 18]] },
+    { id: 2, name: '二更',        hours: '亥时 二十一至二十三', segs: [['bell', 'man', 18]] },
+    { id: 3, name: '三更',        hours: '子时 二十三至一',    segs: [['bell', 'man', 18]] },
+    { id: 4, name: '四更',        hours: '丑时 一至三',        segs: [['bell', 'zhong', 18]] },
+    { id: 5, name: '五更 · 亮更', hours: '寅时 三至五',        segs: [['drum', 'jin', 18], ['bell', 'man', 18]] }
+  ];
+
+  const WIN_PERFECT = 0.115;
+  const WIN_GOOD = 0.225;
+
+  let NOTES = [];      // { t, lane, judged, hit }
+  let WAVES = [];      // { id, name, hours, rule, start, end }
+
+  function buildChart() {
+    NOTES = []; WAVES = [];
+    let t = 2.0;
+    for (let w = 0; w < WAVE_DEF.length; w++) {
+      const def = WAVE_DEF[w];
+      const start = t;
+      t += 1.6;                                    // 更牌展示时间
+      for (let s = 0; s < def.segs.length; s++) {
+        const [lane, tempo, n] = def.segs[s];
+        const step = TEMPO[tempo];
+        for (let i = 0; i < n; i++) {
+          NOTES.push({ t: t, lane: lane, judged: false, hit: false });
+          t += step;
+        }
+        t += 1.1;                                  // 鼓钟之间的停顿
+      }
+      WAVES.push({ id: def.id, name: def.name, hours: def.hours, rule: RULE_TEXT[def.id], start: start, end: t + 1.2 });
+      t += 2.6;                                    // 更间
+    }
+    return t + 2.0;
+  }
+
+  /* ============ 状态 ============ */
+  const START_LIVES = 3;
+  const G = {
+    mode: 'title',
+    t: 0, startAt: 0, endAt: 0,
+    score: 0, combo: 0, best: 0, hits: 0, chaos: 0,
+    lives: START_LIVES,
+    waveIdx: 0,
+    fx: [], shake: 0, flash: 0, flashC: '240,140,70',
+    comboAt: -9, dawn: 0
+  };
+
+  /* ============ 判定 ============ */
+  function laneOf(y) {
+    // 上半屏撞钟，下半屏击鼓
+    return y < BOX.y + BOX.h * 0.5 ? 'bell' : 'drum';
+  }
+
+  function tap(clientY) {
+    if (G.mode !== 'playing') return;
+    const t = now() - G.startAt;
+    const lane = laneOf(clientY);
+
+    let best = null, bestErr = Infinity;
+    for (let i = 0; i < NOTES.length; i++) {
+      const n = NOTES[i];
+      if (n.judged || n.lane !== lane) continue;
+      const e = Math.abs(n.t - t);
+      if (e <= WIN_GOOD && e < bestErr) { best = n; bestErr = e; }
+    }
+
+    if (best) {
+      const perfect = bestErr <= WIN_PERFECT;
+      best.judged = true; best.hit = true;
+      onHit(lane, perfect, bestErr);
+    } else {
+      onChaos(lane);
+    }
+  }
+
+  function onHit(lane, perfect, err) {
+    G.combo++;
+    if (G.combo > G.best) G.best = G.combo;
+    G.hits++;
+    const mult = 1 + Math.min(G.combo - 1, 24) * 0.08;
+    G.score += Math.round((perfect ? 110 : 65) * mult);
+    G.comboAt = now();
+    G.shake = lane === 'drum' ? 1 : 0.45;
+    G.flash = 0.5;
+    G.flashC = lane === 'drum' ? '212,84,31' : '230,188,106';
+
+    if (lane === 'drum') playDrum(perfect);
+    else playBell(perfect);
+
+    const p = lane === 'drum' ? RING_DRUM : RING_BELL;
+    G.fx.push({ kind: 'ring', x: p.x, y: p.y, t0: now(), dur: 0.65, r0: p.r * 0.35, r1: p.r * 2.4,
+                c: lane === 'drum' ? PAL.fireLt : PAL.copperLt });
+    for (let i = 0; i < (perfect ? 8 : 4); i++) {
+      const a = Math.random() * TAU, sp = 14 + Math.random() * 38;
+      G.fx.push({ kind: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+                  t0: now(), dur: 0.45 + Math.random() * 0.3,
+                  c: lane === 'drum' ? PAL.fire : PAL.copper });
+    }
+  }
+
+  function onChaos(lane) {
+    G.chaos++;
+    G.lives--;
+    G.combo = 0;
+    G.flash = 1;
+    G.flashC = '170,40,30';
+    G.shake = 1.2;
+    playChaos();
+    const p = lane === 'drum' ? RING_DRUM : RING_BELL;
+    G.fx.push({ kind: 'text', x: p.x, y: p.y - p.r - 10, t0: now(), dur: 1.0, txt: '乱更', c: '#e06a52' });
+    if (G.lives <= 0) endGame(false);
+  }
+
+  /* ============ 更新 ============ */
+  function update(dt) {
+    const t = now() - G.startAt;
+
+    // 漏响
+    if (G.mode === 'playing') {
+      for (let i = 0; i < NOTES.length; i++) {
+        const n = NOTES[i];
+        if (!n.judged && t > n.t + WIN_GOOD) {
+          n.judged = true;
+          G.combo = 0;
+        }
+      }
+      // 更次推进
+      let wi = 0;
+      for (let i = 0; i < WAVES.length; i++) if (t >= WAVES[i].start) wi = i;
+      G.waveIdx = wi;
+      // 天亮
+      if (G.waveIdx >= 3) G.dawn = clamp(G.dawn + dt * 0.18, 0, 1);
+      if (t > G.endAt) endGame(true);
+    }
+
+    G.shake = Math.max(0, G.shake - dt * 3.2);
+    G.flash = Math.max(0, G.flash - dt * 2.6);
+  }
+
+  /* ============ 主循环 ============ */
+  let lastT = 0;
+  function loop(ts) {
+    try {
+      const t = now();
+      let dt = ts / 1000 - lastT;
+      if (!isFinite(dt) || dt < 0) dt = 0;
+      dt = Math.min(dt, 0.05);
+      lastT = ts / 1000;
+      update(dt);
+      render(t, dt);
+    } catch (e) { console.error('loop error', e); }
+    requestAnimationFrame(loop);
+  }
+
+  /* ============ 绘制 ============ */
+  function render(t, dt) {
+    const sh = G.shake;
+    const ox = sh > 0 ? (Math.random() - 0.5) * sh * 3 : 0;
+    const oy = sh > 0 ? (Math.random() - 0.5) * sh * 3 : 0;
+
+    ctx.save();
+    ctx.translate(Math.round(ox), Math.round(oy));
+    drawSky(t);
+    if (sceneryCanvas) ctx.drawImage(sceneryCanvas, 0, 0);
+    drawAxis(t);
+    drawDrumTower(t);
+    drawNotes(t);
+    drawBellTower(t);     // 钟楼压在音符之上：声音像是从楼里传出来的
+    if (G.mode === 'playing') {
+      drawRing(RING_BELL, '#f5dda6', G.glowBell || 0);
+      drawRing(RING_DRUM, '#ff7d3f', G.glowDrum || 0);
+    }
+    drawFx(t);
+    drawVignette();
+    ctx.restore();
+
+    octx.fillStyle = PAL.ink;
+    octx.fillRect(0, 0, outCvs.width, outCvs.height);
+    octx.drawImage(pcvs, 0, 0, W, H, BOX.x, BOX.y, BOX.w, BOX.h);
+
+    drawHUD(t);
+    drawFxText(t);
+  }
+
+  function drawSky(t) {
+    const d = G.dawn;
+    const top = d > 0.5 ? '#2b1a24' : PAL.ink;
+    const band1 = Math.round(H * 0.34);
+    const band2 = Math.round(H * 0.62);
+
+    ctx.fillStyle = top;
+    ctx.fillRect(0, 0, W, band1);
+    ctx.fillStyle = d > 0.5 ? '#3a2028' : PAL.night;
+    ctx.fillRect(0, band1, W, band2 - band1);
+    ctx.fillStyle = d > 0.5 ? '#4a2830' : PAL.night2;
+    ctx.fillRect(0, band2, W, H - band2);
+
+    // 星
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
+      if (s.y > band1) continue;
+      const a = s.a * (1 - d * 0.8) * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
+      if (a <= 0.02) continue;
+      ctx.fillStyle = 'rgba(232,223,200,' + a.toFixed(2) + ')';
+      ctx.fillRect(s.x, s.y, 1, 1);
+    }
+
+    // 天将亮时的地平线暖光
+    if (d > 0.02) {
+      const y = Math.round(H * 0.72);
+      ctx.fillStyle = 'rgba(216,137,74,' + (0.10 * d).toFixed(3) + ')';
+      ctx.fillRect(0, y, W, Math.round(H * 0.10));
+      ctx.fillStyle = 'rgba(240,160,90,' + (0.07 * d).toFixed(3) + ')';
+      ctx.fillRect(0, y + Math.round(H * 0.03), W, Math.round(H * 0.05));
+    }
+  }
+
+  function trap(x, y, topW, botW, h) {
+    ctx.beginPath();
+    ctx.moveTo(x - botW / 2, y + h);
+    ctx.lineTo(x - topW / 2, y);
+    ctx.lineTo(x + topW / 2, y);
+    ctx.lineTo(x + botW / 2, y + h);
+    ctx.closePath();
+  }
+
+  function drawAxis(t) {
+    const x = Math.round(cx);
+    const w = Math.max(4, Math.round(W * 0.042));
+    const yTop = Math.round(H * 0.318);
+    const yBot = Math.round(H * 0.688);
+
+    // 石道
+    ctx.fillStyle = '#1a121b';
+    ctx.fillRect(x - w, yTop, w * 2, yBot - yTop);
+    ctx.fillStyle = '#221a23';
+    ctx.fillRect(x - w + 1, yTop, w * 2 - 2, yBot - yTop);
+
+    // 上下两端渐隐
+    for (let i = 0; i < 10; i++) {
+      const a = 0.12 * (1 - i / 10);
+      ctx.fillStyle = 'rgba(12,8,16,' + a.toFixed(3) + ')';
+      ctx.fillRect(x - w, yTop + i, w * 2, 1);
+      ctx.fillRect(x - w, yBot - 1 - i, w * 2, 1);
+    }
+
+    // 石缝
+    ctx.fillStyle = '#120c15';
+    for (let y = yTop + 5; y < yBot; y += 8) {
+      ctx.fillRect(x - w + 1, y, w * 2 - 2, 1);
+    }
+    // 中缝
+    ctx.fillStyle = '#0e0912';
+    ctx.fillRect(x - w, yTop, 1, yBot - yTop);
+    ctx.fillRect(x + w - 1, yTop, 1, yBot - yTop);
+  }
+
+  function drawBellTower(t) {
+    const bwx = Math.round(W * 0.255);
+    const bh = Math.round(H * 0.132);
+    const x0 = Math.round(cx - bwx / 2);
+    const y0 = Math.round(H * 0.215 - bh);
+
+    // 台基
+    ctx.fillStyle = '#332c31';
+    ctx.fillRect(x0 - 5, y0 + bh, bwx + 10, 5);
+    ctx.fillStyle = '#463d44';
+    ctx.fillRect(x0 - 5, y0 + bh, bwx + 10, 1);
+    ctx.fillStyle = '#221c21';
+    ctx.fillRect(x0 - 5, y0 + bh + 4, bwx + 10, 1);
+
+    // 砖身
+    ctx.fillStyle = PAL.brick;
+    ctx.fillRect(x0, y0, bwx, bh);
+    for (let y = y0 + 3; y < y0 + bh; y += 4) {
+      ctx.fillStyle = 'rgba(0,0,0,.16)';
+      ctx.fillRect(x0, y, bwx, 1);
+    }
+    ctx.fillStyle = PAL.brickLt;
+    ctx.fillRect(x0, y0, 1, bh);
+    ctx.fillStyle = PAL.brickDk;
+    ctx.fillRect(x0 + bwx - 1, y0, 1, bh);
+
+    // 券门
+    const dw = Math.round(bwx * 0.40);
+    const dh = Math.round(bh * 0.66);
+    const dx = Math.round(cx - dw / 2);
+    const dy = y0 + bh - dh;
+    ctx.fillStyle = '#0b0709';
+    ctx.fillRect(dx, dy + 2, dw, dh - 2);
+    ctx.fillRect(dx + 1, dy, dw - 2, 2);
+    ctx.fillStyle = '#241c20';
+    ctx.fillRect(dx - 1, dy + 1, 1, dh);
+    ctx.fillRect(dx + dw, dy + 1, 1, dh);
+
+    // 铜钟
+    const cup = Math.round(dw * 0.66);
+    const bellTop = dy + 3;
+    const bellH = Math.round(dh * 0.62);
+    const swing = Math.round(Math.sin(t * 1.7) * 1.1);
+    const bx = Math.round(cx + swing);
+    ctx.fillStyle = PAL.copperDk;
+    ctx.fillRect(bx - 1, bellTop - 2, 3, 2);
+    ctx.fillStyle = PAL.copper;
+    trap(bx, bellTop, cup * 0.72, cup, bellH);
+    ctx.fill();
+    ctx.fillStyle = PAL.copperLt;
+    ctx.fillRect(bx - Math.round(cup * 0.30), bellTop + 1, 1, Math.round(bellH * 0.7));
+    ctx.fillStyle = PAL.copperDk;
+    ctx.fillRect(bx - Math.round(cup / 2), bellTop + bellH - 1, cup, 1);
+
+    // 屋顶：重檐，灰筒瓦绿琉璃剪边
+    const roofTop = y0 - 16;
+    // 下檐
+    trap(cx, y0 - 5, bwx * 0.94, bwx * 1.24, 6);
+    ctx.fillStyle = '#39323a'; ctx.fill();
+    ctx.fillStyle = PAL.tile; trap(cx, y0 - 5, bwx * 0.94, bwx * 1.24, 2); ctx.fill();
+    // 上檐
+    trap(cx, roofTop, bwx * 0.56, bwx * 0.96, 11);
+    ctx.fillStyle = '#413a43'; ctx.fill();
+    ctx.fillStyle = PAL.tile; trap(cx, roofTop, bwx * 0.56, bwx * 0.96, 2); ctx.fill();
+    // 正脊
+    ctx.fillStyle = '#241e26';
+    ctx.fillRect(Math.round(cx) - 4, roofTop - 3, 9, 4);
+    ctx.fillStyle = PAL.tileLt;
+    ctx.fillRect(Math.round(cx) - 4, roofTop - 3, 9, 1);
+  }
+
+  function drawDrumTower(t) {
+    const bwx = Math.round(W * 0.305);
+    const bh = Math.round(H * 0.120);
+    const x0 = Math.round(cx - bwx / 2);
+    const y0 = Math.round(H * 0.815 - bh);
+
+    // 台基
+    ctx.fillStyle = '#2a2028';
+    ctx.fillRect(x0 - 6, y0 + bh, bwx + 12, 5);
+    ctx.fillStyle = '#3a2c34';
+    ctx.fillRect(x0 - 6, y0 + bh, bwx + 12, 1);
+    ctx.fillStyle = '#1c141a';
+    ctx.fillRect(x0 - 6, y0 + bh + 4, bwx + 12, 1);
+
+    // 木构红身
+    ctx.fillStyle = PAL.zhuDk;
+    ctx.fillRect(x0, y0, bwx, bh);
+    ctx.fillStyle = PAL.zhu;
+    ctx.fillRect(x0 + 1, y0 + 1, bwx - 2, bh - 2);
+    // 立柱
+    for (let i = 0; i < 5; i++) {
+      const px = x0 + Math.round((i + 1) * bwx / 6);
+      ctx.fillStyle = PAL.zhuDk;
+      ctx.fillRect(px, y0 + 1, 1, bh - 2);
+    }
+    ctx.fillStyle = PAL.zhuLt;
+    ctx.fillRect(x0 + 1, y0 + 1, bwx - 2, 1);
+
+    // 券门与群鼓
+    const dw = Math.round(bwx * 0.52);
+    const dh = Math.round(bh * 0.50);
+    const dx = Math.round(cx - dw / 2);
+    const dy = y0 + bh - dh - 3;
+    ctx.fillStyle = '#0d0809';
+    ctx.fillRect(dx, dy + 2, dw, dh - 2);
+    ctx.fillRect(dx + 1, dy, dw - 2, 2);
+
+    const cols = 6, rows = 2;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const ddx = Math.round(dx + 2 + c * (dw - 4) / cols);
+        const ddy = Math.round(dy + 3 + r * (dh - 5) / rows);
+        const ddw = Math.max(2, Math.round((dw - 4) / cols) - 1);
+        const ddh = Math.max(2, Math.round((dh - 5) / rows) - 1);
+        ctx.fillStyle = PAL.zhuDk;
+        ctx.fillRect(ddx, ddy, ddw, ddh);
+        ctx.fillStyle = PAL.zhuLt;
+        ctx.fillRect(ddx, ddy, ddw, 1);
+        ctx.fillStyle = '#e8d9b0';
+        ctx.fillRect(ddx + Math.floor(ddw / 2), ddy + Math.floor(ddh / 2), 1, 1);
+      }
+    }
+
+    // 屋顶：三重檐，灰筒瓦绿剪边
+    const tiers = [
+      [y0 - 4, bwx * 1.03, bwx * 1.30, 5],
+      [y0 - 9, bwx * 0.82, bwx * 1.05, 5],
+      [y0 - 14, bwx * 0.50, bwx * 0.84, 5]
+    ];
+    for (let i = 0; i < tiers.length; i++) {
+      const [yy, tw, bw2, hh] = tiers[i];
+      trap(cx, yy, tw, bw2, hh);
+      ctx.fillStyle = i === 0 ? '#3a3238' : '#423a41';
+      ctx.fill();
+      ctx.fillStyle = PAL.tile;
+      trap(cx, yy, tw, bw2, 1.6);
+      ctx.fill();
+    }
+    // 正脊
+    ctx.fillStyle = '#241e26';
+    ctx.fillRect(Math.round(cx) - 4, y0 - 18, 9, 4);
+    ctx.fillStyle = PAL.tileLt;
+    ctx.fillRect(Math.round(cx) - 4, y0 - 18, 9, 1);
+  }
+
+  function drawNotes(t) {
+    if (G.mode !== 'playing') return;
+    const playT = t - G.startAt;
+    const LEAD = 1.05;          // 每个音符的提前量
+    const SPAWN_Y = -14;        // 自钟楼之上落下
+
+    let glowBell = 0, glowDrum = 0;
+
+    for (let i = 0; i < NOTES.length; i++) {
+      const n = NOTES[i];
+      if (n.judged) continue;
+      const ring = n.lane === 'drum' ? RING_DRUM : RING_BELL;
+      const dtm = n.t - playT;
+      if (dtm > LEAD) continue;
+
+      const y = SPAWN_Y + (ring.y - SPAWN_Y) * (1 - dtm / LEAD);
+
+      const near = clamp(1 - Math.abs(dtm) / 0.55, 0, 1);
+      if (n.lane === 'drum') glowDrum = Math.max(glowDrum, near);
+      else glowBell = Math.max(glowBell, near);
+
+      const isDrum = n.lane === 'drum';
+      const baseC = isDrum ? PAL.fire : PAL.copperLt;
+
+      // 拖尾（落在上方）
+      for (let k = 1; k <= 3; k++) {
+        const ty = y - k * 5;
+        if (ty < SPAWN_Y) break;
+        ctx.fillStyle = (isDrum ? 'rgba(212,84,31,' : 'rgba(230,188,106,') + (0.22 / k).toFixed(2) + ')';
+        ctx.fillRect(Math.round(cx) - 1, Math.round(ty), 2, 3);
+      }
+
+      // 本体（描边 + 亮心，保证压在楼上也看得清）
+      const r = isDrum ? 4 : 3.5;
+      const rx = Math.round(cx - r), ry = Math.round(y - r), rs = Math.round(r * 2);
+      ctx.fillStyle = '#100a10';
+      ctx.fillRect(rx - 1, ry - 1, rs + 2, rs + 2);
+      ctx.fillStyle = baseC;
+      ctx.fillRect(rx, ry, rs, rs);
+      ctx.fillStyle = isDrum ? '#ffd9a8' : '#fff3cf';
+      ctx.fillRect(rx + 1, ry + 1, rs - 2, rs - 2);
+      ctx.fillStyle = isDrum ? PAL.fire : PAL.copper;
+
+      if (isDrum) {
+        ctx.fillStyle = '#7a2414';
+        ctx.fillRect(Math.round(cx) - 1, Math.round(y) - 1, 2, 2);
+      } else {
+        ctx.fillStyle = '#8a5f18';
+        ctx.fillRect(Math.round(cx) - 1, Math.round(y) - 3, 2, 1);
+        ctx.fillRect(Math.round(cx) - 2, Math.round(y) - 2, 4, 1);
+        ctx.fillRect(Math.round(cx) - 2, Math.round(y) + 1, 4, 1);
+        ctx.fillRect(Math.round(cx) - 1, Math.round(y) + 2, 2, 1);
+      }
+    }
+
+    G.glowBell = glowBell;
+    G.glowDrum = glowDrum;
+  }
+
+  function drawRing(p, color, glow) {
+    ctx.save();
+    ctx.globalAlpha = 0.45 + glow * 0.55;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, TAU);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.14 + glow * 0.40;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r + 1.5, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+
+    // 内点
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.6 + glow * 0.4;
+    ctx.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 2);
+    ctx.globalAlpha = 1;
+  }
+
+  function drawFx(t) {
+    for (let i = G.fx.length - 1; i >= 0; i--) {
+      const f = G.fx[i];
+      const p = (t - f.t0) / f.dur;
+      if (p >= 1) { G.fx.splice(i, 1); continue; }
+      const e = 1 - p;
+      if (f.kind === 'text') continue;
+      if (f.kind === 'ring') {
+        ctx.save();
+        ctx.globalAlpha = e * e * 0.85;
+        ctx.strokeStyle = f.c;
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, lerp(f.r0, f.r1, 1 - e * e), 0, TAU);
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        const x = Math.round(f.x + f.vx * p);
+        const y = Math.round(f.y + f.vy * p + 16 * p * p);
+        ctx.fillStyle = f.c;
+        ctx.globalAlpha = e * 0.9;
+        ctx.fillRect(x, y, 1, 1);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  function drawVignette() {
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = 'rgba(6,4,8,' + (0.10 + i * 0.03).toFixed(2) + ')';
+      ctx.fillRect(0, i * 2, W, 2);
+      ctx.fillRect(0, H - 2 - i * 2, W, 2);
+      ctx.fillRect(i * 2, 0, 2, H);
+      ctx.fillRect(W - 2 - i * 2, 0, 2, H);
+    }
+  }
+
+  /* ============ HUD ============ */
+  function drawHUD(t) {
+    if (G.mode === 'title') return;
+
+    const sw = BOX.w, pad = Math.round(sw * 0.055);
+    const x0 = BOX.x + pad, y0 = BOX.y + pad * 0.85;
+
+    // 分数
+    octx.textAlign = 'left'; octx.textBaseline = 'top';
+    octx.font = '10px "Songti SC","STSong","SimSun",serif';
+    octx.fillStyle = 'rgba(232,223,200,.42)';
+    octx.fillText('今 夜', x0, y0);
+    octx.font = '24px "Songti SC","STSong","SimSun",serif';
+    octx.fillStyle = PAL.copperLt;
+    octx.fillText(String(G.score), x0, y0 + 13);
+
+    // 更筹（三盏）
+    const gap = Math.max(12, sw * 0.034);
+    const hx = BOX.x + BOX.w - pad - (START_LIVES - 1) * gap - 6;
+    const hy = y0 + 20;
+    for (let i = 0; i < START_LIVES; i++) {
+      const x = hx + i * gap;
+      if (i < G.lives) {
+        octx.fillStyle = 'rgba(240,144,64,.22)';
+        octx.beginPath(); octx.arc(x, hy, 6.5, 0, TAU); octx.fill();
+        octx.fillStyle = PAL.fireLt;
+        octx.beginPath(); octx.arc(x, hy, 2.6, 0, TAU); octx.fill();
+      } else {
+        octx.fillStyle = 'rgba(232,223,200,.12)';
+        octx.beginPath(); octx.arc(x, hy, 2.2, 0, TAU); octx.fill();
+      }
+    }
+
+    // 当前更次
+    if (G.mode === 'playing' && WAVES.length) {
+      const w = WAVES[G.waveIdx];
+      octx.textAlign = 'center'; octx.textBaseline = 'top';
+      octx.font = '11px "Songti SC","STSong","SimSun",serif';
+      octx.fillStyle = 'rgba(232,223,200,.55)';
+      octx.fillText(w.name, BOX.x + BOX.w / 2, y0 + 2);
+
+      // 更牌：进入更次头 1.5 秒显示规则
+      const since = (now() - G.startAt) - w.start;
+      if (since >= 0 && since < 1.5) {
+        const a = Math.min(1, Math.min(since, 1.5 - since) * 2.4);
+        const bx = BOX.x + BOX.w / 2;
+        const by = BOX.y + BOX.h * 0.455;
+        octx.save();
+        octx.globalAlpha = a;
+        octx.textAlign = 'center';
+        octx.textBaseline = 'middle';
+        octx.font = '13px "Songti SC","STSong","SimSun",serif';
+        octx.fillStyle = '#f4ecdc';
+        octx.fillText(w.rule, bx, by);
+        octx.font = '10px "Songti SC","STSong","SimSun",serif';
+        octx.fillStyle = 'rgba(232,223,200,.45)';
+        octx.fillText(w.hours, bx, by + 18);
+        if (w.id === 1) {
+          octx.font = '9px "Songti SC","STSong","SimSun",serif';
+          octx.fillStyle = 'rgba(240,144,64,.85)';
+          octx.fillText('上半屏撞钟　下半屏击鼓', bx, by + 34);
+        }
+        octx.restore();
+      }
+    }
+
+    // 连响
+    if (G.combo >= 2) {
+      const k = Math.exp(-(t - G.comboAt) * 7);
+      const sc = 1 + 0.26 * k;
+      octx.save();
+      octx.translate(BOX.x + BOX.w / 2, BOX.y + BOX.h * 0.79);
+      octx.scale(sc, sc);
+      octx.textAlign = 'center'; octx.textBaseline = 'middle';
+      octx.font = '22px "Songti SC","STSong","SimSun",serif';
+      octx.fillStyle = 'rgba(240,144,64,' + (0.55 + 0.4 * k).toFixed(2) + ')';
+      octx.fillText('×' + G.combo, 0, 0);
+      octx.restore();
+    }
+
+    // 闪光
+    if (G.flash > 0) {
+      const a = G.flash * G.flash * 0.24;
+      octx.fillStyle = 'rgba(' + G.flashC + ',' + a.toFixed(3) + ')';
+      octx.fillRect(BOX.x, BOX.y, BOX.w, BOX.h);
+    }
+  }
+
+  function drawFxText(t) {
+    for (let i = G.fx.length - 1; i >= 0; i--) {
+      const f = G.fx[i];
+      if (f.kind !== 'text') continue;
+      const p = (t - f.t0) / f.dur;
+      if (p >= 1) { G.fx.splice(i, 1); continue; }
+      const e = 1 - p;
+      octx.save();
+      octx.globalAlpha = Math.min(1, e * 1.8);
+      octx.font = '13px "Songti SC","STSong","SimSun",serif';
+      octx.textAlign = 'center'; octx.textBaseline = 'middle';
+      octx.fillStyle = f.c;
+      octx.fillText(f.txt, toSX(f.x), toSY(f.y) - p * 18);
+      octx.restore();
+    }
+  }
+
+  /* ============ 流程 ============ */
+  const scrTitle = document.getElementById('scrTitle');
+  const scrResult = document.getElementById('scrResult');
+
+  const FACTS = [
+    '钟鼓楼始建于元至元九年（1272），前后纵置于北京中轴线的北端，是元明清三代的报时中心。',
+    '鼓楼原名"齐政楼"，取《尚书》"璇玑玉衡，以齐七政"——七政即日、月与金木水火土五星。',
+    '鼓楼二层原有 25 面更鼓：中间主鼓代表一年，周围 24 面代表二十四节气。',
+    '击鼓撞钟各一百零八声，因为一年有十二个月、二十四节气、七十二候，相加正好一百零八。',
+    '鼓谱是"紧十八、慢十八、不紧不慢又十八"，反复两遍，共一百零八响。',
+    '定更与亮更先击鼓后撞钟；二更至四更只撞钟、不击鼓。一夜报时始于暮鼓，止于晨钟。',
+    '钟楼大钟铸于明永乐年间，通高 5.55 米，重约 63 吨，是国内现存最大的古钟，声闻十余里。'
+  ];
+  let factIdx = 0;
+
+  function startGame() {
+    initAudio(); resumeAudio();
+    G.mode = 'playing';
+    G.score = 0; G.combo = 0; G.best = 0; G.hits = 0; G.chaos = 0;
+    G.lives = START_LIVES;
+    G.waveIdx = 0; G.fx.length = 0;
+    G.shake = 0; G.flash = 0; G.comboAt = -9; G.dawn = 0;
+    G.startAt = now();
+    G.endAt = buildChart();
+
+    scrTitle.classList.remove('on');
+    scrResult.classList.remove('on');
+  }
+
+  function rankOf(acc) {
+    if (acc >= 0.95) return '钟鼓和鸣';
+    if (acc >= 0.80) return '更漏无差';
+    if (acc >= 0.60) return '城中可闻';
+    if (acc >= 0.35) return '晨昏未辨';
+    return '一城错时';
+  }
+
+  function endGame(survived) {
+    if (G.mode !== 'playing') return;
+    G.mode = 'over';
+    const total = NOTES.length;
+    const acc = total > 0 ? G.hits / total : 0;
+
+    document.getElementById('rRank').textContent = rankOf(acc);
+    document.getElementById('rScore').textContent = String(G.score);
+    document.getElementById('rHits').textContent = G.hits + '/' + total;
+    document.getElementById('rBest').textContent = String(G.best);
+    document.getElementById('rChaos').textContent = String(G.chaos);
+    const fact = FACTS[factIdx % FACTS.length]; factIdx++;
+    document.getElementById('rFact').textContent =
+      (survived ? '五更已尽，晨钟长鸣，城门开。\n\n' : '更次错乱，城中人起错了时辰。\n\n') + '小识 · ' + fact;
+
+    setTimeout(() => scrResult.classList.add('on'), 600);
+  }
+
+  /* ============ 输入 ============ */
+  window.addEventListener('pointerdown', (e) => {
+    if (e.target === setMuteEl || (e.target && e.target.closest && e.target.closest('.screen'))) return;
+    resumeAudio();
+    if (G.mode === 'playing') tap(e.clientY);
+  }, { passive: true });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      if (G.mode === 'playing') tap(window.innerHeight * 0.75);
+    }
+  });
+
+  document.getElementById('startBtn').addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
+  document.getElementById('againBtn').addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', () => setTimeout(resize, 260));
+
+  resize();
+  requestAnimationFrame((ts) => { lastT = ts / 1000; requestAnimationFrame(loop); });
+})();
+</script>
+</body>
+</html>

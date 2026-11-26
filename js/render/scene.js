@@ -143,7 +143,9 @@ export class SceneRenderer {
     const drawY = player.y - size + 5 + bob;
 
     ctx.save();
-    ctx.imageSmoothingEnabled = false;
+    // 水彩角色不是像素画，这里要开平滑，否则缩小时边缘会碎。
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(
       this.heroImage,
       sourceX,

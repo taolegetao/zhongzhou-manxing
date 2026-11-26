@@ -32,8 +32,8 @@
       <div class="axis-meter" aria-hidden="true">
         <div class="axis-labels">
           <span>已闭环</span>
-          <span id="axisPercent">0 / 4</span>
-          <span>共 4 个点位</span>
+          <span id="axisPercent">0 / 5</span>
+          <span>共 5 个点位</span>
         </div>
         <div class="axis-track">
           <span id="axisFill" class="axis-fill"></span>
@@ -143,6 +143,7 @@
           <p id="sheetIntro" class="sheet-lead"></p>
           <div id="sheetTags" class="tag-row"></div>
           <div id="sheetDetail" class="sheet-detail"></div>
+          <div id="sheetGame" class="sheet-game" hidden></div>
 
           <section id="quizBlock" class="quiz-block">
             <div class="quiz-head">
@@ -219,7 +220,7 @@
         <p class="save-intro">当前进度会自动保存。读取旧存档会替换当前进度，覆盖前需要确认。</p>
         <div id="saveCurrent" class="save-current">
           <span class="save-current-label">当前游玩</span>
-          <strong id="saveCurrentMeta">0 / 4 · 永定门附近</strong>
+          <strong id="saveCurrentMeta">0 / 5 · 永定门附近</strong>
           <small id="saveCurrentTime">尚未自动保存</small>
         </div>
         <div id="saveGrid" class="save-grid"></div>
@@ -246,5 +247,12 @@
   </noscript>
 
   <script type="module" src="./js/main.js?v=1.3.2"></script>
+  <div id="gameLayer" class="game-layer" hidden>
+    <div class="game-bar">
+      <button id="gameClose" type="button">← 返回地图</button>
+      <span id="gameTitle">小游戏</span>
+    </div>
+    <iframe id="gameFrame" class="game-frame" title="小游戏" allow="autoplay; fullscreen"></iframe>
+  </div>
 </body>
 </html>

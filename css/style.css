@@ -2551,3 +2551,76 @@ html.reduce-motion *::after {
   .confirm-card h2 { font-size: 20px; }
   .confirm-body { font-size: 10px; }
 }
+
+
+/* ---------- 小游戏入口 ---------- */
+.sheet-game { margin: 18px 0 6px; }
+.sheet-game[hidden] { display: none; }
+
+.game-entry {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 15px 17px;
+  border-radius: 16px;
+  border: 1px solid rgba(179, 72, 52, 0.34);
+  background: linear-gradient(180deg, #fdf7ea, #f6ecd9);
+  box-shadow: 0 6px 16px rgba(90, 60, 30, 0.08);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.game-entry:active { transform: scale(0.985); }
+.game-entry-kicker { font-size: 11px; letter-spacing: 0.26em; color: var(--red); }
+.game-entry-title { font-size: 17px; letter-spacing: 0.06em; color: var(--ink); }
+.game-entry-desc { font-size: 12.5px; color: var(--muted); }
+
+/* ---------- 小游戏全屏层 ---------- */
+.game-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: #0c0810;
+}
+.game-layer[hidden] { display: none; }
+
+.game-bar {
+  flex: 0 0 auto;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  padding-top: env(safe-area-inset-top);
+  box-sizing: content-box;
+  background: #141019;
+  color: #e8dfc8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.game-bar button {
+  background: transparent;
+  border: 1px solid rgba(232, 223, 200, 0.3);
+  color: #e8dfc8;
+  border-radius: 9px;
+  padding: 7px 13px;
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.game-bar span { font-size: 13px; letter-spacing: 0.16em; opacity: 0.7; }
+
+.game-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  border: 0;
+  display: block;
+  background: #0c0810;
+}
+
+body.game-open { overflow: hidden; }

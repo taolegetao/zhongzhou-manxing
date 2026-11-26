@@ -1,0 +1,1497 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d0a16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>回音壁 · 天坛皇穹宇</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230d0a16'/><ellipse cx='16' cy='18' rx='11' ry='7' fill='none' stroke='%23a8402c' stroke-width='3'/><circle cx='16' cy='18' r='4.5' fill='%23356180'/><circle cx='16' cy='18' r='1.5' fill='%23f0c96a'/></svg>">
+<style>
+  :root{
+    --ink:#e8e0c9;
+    --dim:rgba(232,224,201,.60);
+    --gold:#d9a441;
+    --gold-lt:#f0c96a;
+    --cinnabar:#a8402c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;background:#08060f;}
+  body{
+    font-family:"Songti SC","STSong","SimSun","Noto Serif SC","Source Han Serif SC",serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    -webkit-text-size-adjust:100%;
+    user-select:none;-webkit-user-select:none;
+    position:relative;
+  }
+  #c{position:fixed;inset:0;display:block;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;}
+
+  .screen{
+    position:fixed;inset:0;z-index:10;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:34px 26px;text-align:center;
+    background:radial-gradient(130% 80% at 50% 42%,
+      rgba(10,7,18,.84) 0%,
+      rgba(8,5,15,.93) 55%,
+      rgba(4,3,9,.975) 100%);
+    animation:fadeIn .5s ease both;
+  }
+  .screen.on{display:flex;}
+  @media (prefers-reduced-motion: reduce){
+    .screen{animation:none;}
+  }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  /* 印章 */
+  .seal{
+    position:absolute;
+    top:calc(50% - 168px);right:34px;
+    width:38px;height:52px;
+    display:flex;align-items:center;justify-content:center;
+    border:1.6px solid var(--cinnabar);
+    border-radius:2px;
+    color:var(--cinnabar);
+    font-size:15px;line-height:1.0;
+    letter-spacing:2px;
+    writing-mode:vertical-rl;
+    text-orientation:upright;
+    opacity:.82;
+    box-shadow:0 0 16px rgba(168,64,44,.18) inset;
+  }
+
+  h1{
+    font-weight:400;
+    font-size:clamp(36px,12vw,58px);
+    letter-spacing:.30em;text-indent:.30em;
+    color:#f2ead4;
+    text-shadow:0 0 24px rgba(217,164,65,.28), 0 0 60px rgba(120,150,220,.10);
+  }
+  .sub{
+    margin-top:15px;
+    font-size:12px;letter-spacing:.44em;text-indent:.44em;
+    color:var(--gold);opacity:.85;
+  }
+  .poem{
+    margin-top:28px;
+    font-size:14px;line-height:2.25;
+    color:var(--dim);
+    max-width:21em;
+  }
+  .btn{
+    margin-top:38px;
+    padding:13px 44px;
+    font-family:inherit;font-size:15px;
+    letter-spacing:.48em;text-indent:.48em;
+    color:var(--gold-lt);
+    background:transparent;
+    border:1px solid rgba(217,164,65,.40);
+    border-radius:2px;
+    cursor:pointer;
+    transition:background .22s, transform .1s, border-color .22s;
+    box-shadow:0 0 26px rgba(217,164,65,.06), inset 0 0 20px rgba(217,164,65,.045);
+  }
+  .btn:active{background:rgba(217,164,65,.12);transform:scale(.97);}
+  .tiny{
+    position:absolute;bottom:max(24px,env(safe-area-inset-bottom));
+    font-size:11px;letter-spacing:.22em;color:rgba(232,224,201,.26);
+  }
+
+  .rank{
+    font-weight:400;
+    font-size:clamp(28px,8.6vw,42px);
+    letter-spacing:.2em;text-indent:.2em;
+    color:#f2ead4;
+    text-shadow:0 0 26px rgba(217,164,65,.32);
+  }
+  .rscore{
+    margin-top:20px;
+    font-size:clamp(42px,14vw,64px);
+    letter-spacing:.04em;
+    color:var(--gold-lt);
+    text-shadow:0 0 30px rgba(217,164,65,.28);
+    font-variant-numeric:tabular-nums;
+  }
+  .rscore small{
+    display:block;margin-top:-2px;
+    font-size:11px;letter-spacing:.4em;text-indent:.4em;
+    color:rgba(232,224,201,.40);
+  }
+  .stats{
+    display:flex;gap:min(42px,10vw);
+    margin-top:28px;
+  }
+  .stats > div{display:flex;flex-direction:column;align-items:center;gap:7px;}
+  .stats b{font-weight:400;font-size:23px;color:#e8dfc8;font-variant-numeric:tabular-nums;}
+  .stats span{font-size:10.5px;letter-spacing:.22em;color:rgba(232,224,201,.38);}
+  .fact{
+    margin-top:30px;
+    max-width:23em;
+    font-size:12px;line-height:2.0;
+    color:rgba(232,224,201,.42);
+    padding-top:18px;
+    border-top:1px solid rgba(232,224,201,.08);
+    white-space:pre-line;
+  }
+
+  #muteBtn{
+    position:fixed;
+    top:max(14px,env(safe-area-inset-top));right:14px;
+    width:32px;height:32px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;color:rgba(232,224,201,.42);
+    border:1px solid rgba(232,224,201,.13);
+    border-radius:2px;
+    z-index:30;cursor:pointer;
+    transition:.2s;
+  }
+  #muteBtn:active{transform:scale(.92);}
+  #muteBtn.off{color:rgba(232,224,201,.16);border-color:rgba(232,224,201,.06);}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="muteBtn" title="声音">♪</div>
+
+<div class="screen on" id="scrTitle">
+  <div class="seal">回音</div>
+  <h1>回音壁</h1>
+  <p class="sub">天坛 · 皇穹宇 · 祭天之所</p>
+  <p class="poem">皇穹宇，圜丘坛供奉皇天上帝之所。<br>声音贴着圆墙走一周，回到耳边——<br>古人说，这是天在应答。</p>
+  <button class="btn" id="startBtn">开 始</button>
+  <p class="tiny">一局二十四声，应二十四节气</p>
+</div>
+
+<div class="screen" id="scrResult">
+  <p class="sub">你留在墙上的回音</p>
+  <h2 class="rank" id="rRank">余音绕梁</h2>
+  <p class="rscore"><span id="rScore">0</span><small>回 响</small></p>
+  <div class="stats">
+    <div><b id="rHits">0/0</b><span>接 住</span></div>
+    <div><b id="rBest">0</b><span>最高连响</span></div>
+    <div><b id="rPerfect">0</b><span>清 响</span></div>
+  </div>
+  <p class="fact" id="rFact">回音壁是皇穹宇的圆形围墙，直径 61.5 米，高 3.72 米。墙面磨砖对缝、极为光滑，声波沿墙连续反射（爬行波），一人贴墙低语，六十余米外可闻。</p>
+  <button class="btn" id="againBtn">再 来 一 次</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* =========================================================
+     古风色板（中国传统色）
+     ========================================================= */
+  const PAL = {
+    ink:      '#0d0a16',
+    night:    '#141024',
+    night2:   '#1a1530',
+    night3:   '#221b3c',
+    dai:      '#2b2440',
+    stone:    '#2f4a5e',
+    qing:     '#35617a',
+    qingLt:   '#4d87a3',
+    zhu:      '#8f3324',
+    zhuLt:    '#b2482f',
+    zhuDk:    '#5e2119',
+    zhe:      '#6b4530',
+    huang:    '#d9a441',
+    jin:      '#f0c96a',
+    yuebai:   '#e6dfc8',
+    su:       '#a9a08c',
+    song:     '#101a16',
+    songLt:   '#1a2830',
+    ground:   '#181327'
+  };
+
+  /* =========================================================
+     画布：低分辨率像素画布 + 最近邻放大
+     ========================================================= */
+  const outCvs = document.getElementById('c');
+  const octx = outCvs.getContext('2d', { alpha: false });
+
+  const pcvs = document.createElement('canvas');
+  let ctx = null;                 // 像素画布上下文（以「美术像素」为单位）
+
+  let S = 2;                      // 一个美术像素 = S 个 CSS 像素
+  let W = 195, H = 422;           // 美术尺寸
+  let BOX = { x: 0, y: 0, w: 0, h: 0 };
+  let DPR = 1;
+
+  let cx = 0, cy = 0, RX = 0, RY = 0, wallW = 0;
+  let stars = [];
+
+  const PLAYER_ANG = Math.PI / 2;
+  const SEG = 48;                 // 墙面分段（同时用于点亮与光照）
+
+  function layout() {
+    cx = W * 0.5;
+    cy = H * 0.475;
+    RX = Math.min(W * 0.450, H * 0.320);
+    RY = RX * 0.655;
+    wallW = Math.max(5, RX * 0.130);
+  }
+
+  function makeStars() {
+    stars = [];
+    const n = Math.round((W * H) / 900);
+    for (let i = 0; i < n; i++) {
+      stars.push({
+        x: Math.floor(Math.random() * W),
+        y: Math.floor(Math.random() * H * 0.9),
+        ph: Math.random() * TAU,
+        sp: 0.5 + Math.random() * 1.4,
+        a: 0.25 + Math.random() * 0.6
+      });
+    }
+  }
+
+  function resize() {
+    const cw = window.innerWidth;
+    const ch = window.innerHeight;
+    DPR = Math.min(window.devicePixelRatio || 1, 3);
+
+    // 舞台收成竖屏比例，宽屏两侧留墨
+    const stageW = Math.min(cw, Math.round(ch * 0.62));
+    const stageH = ch;
+
+    S = 2;
+    while (stageW / S > 220) S++;
+
+    const AW = Math.max(120, Math.floor(stageW / S));
+    const AH = Math.max(200, Math.floor(stageH / S));
+
+    W = AW; H = AH;
+    BOX.w = AW * S;
+    BOX.h = AH * S;
+    BOX.x = Math.round((cw - BOX.w) / 2);
+    BOX.y = Math.round((ch - BOX.h) / 2);
+
+    pcvs.width = AW;
+    pcvs.height = AH;
+    ctx = pcvs.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    outCvs.width = Math.round(cw * DPR);
+    outCvs.height = Math.round(ch * DPR);
+    outCvs.style.width = cw + 'px';
+    outCvs.style.height = ch + 'px';
+    octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    octx.imageSmoothingEnabled = false;
+
+    layout();
+    makeStars();
+    makeScenery();
+    makeOverlay();
+  }
+
+  function toSX(v) { return BOX.x + v * S; }
+  function toSY(v) { return BOX.y + v * S; }
+
+  /* =========================================================
+     音频：全部合成
+     ========================================================= */
+  let actx = null, master = null, wetGain = null;
+  let muted = false;
+  const setMuteEl = document.getElementById('muteBtn');
+
+  function initAudio() {
+    if (actx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try { actx = new AC(); } catch (e) { return; }
+
+    master = actx.createGain();
+    master.gain.value = 0.85;
+    master.connect(actx.destination);
+
+    const dly = actx.createDelay(2.0);
+    dly.delayTime.value = 0.29;
+    const fb = actx.createGain();
+    fb.gain.value = 0.34;
+    const lp = actx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 2200;
+    wetGain = actx.createGain();
+    wetGain.gain.value = 0.52;
+
+    master.connect(dly);
+    dly.connect(lp);
+    lp.connect(fb);
+    fb.connect(dly);
+    lp.connect(wetGain);
+    wetGain.connect(actx.destination);
+  }
+
+  function resumeAudio() {
+    if (actx && actx.state === 'suspended') actx.resume();
+  }
+
+  // 五声音阶：宫 商 角 徵 羽
+  const PENTA = [0, 2, 4, 7, 9];
+  function noteFreq(step) {
+    step = Math.max(0, Math.min(step, 17));
+    const oct = Math.floor(step / 5);
+    const semi = PENTA[step % 5] + 12 * oct;
+    return 261.626 * Math.pow(2, semi / 12);
+  }
+
+  // 古琴式的拨弦：缓起、长余韵
+  function playNote(step, bright) {
+    if (!actx || muted) return;
+    const t = actx.currentTime;
+    const f = noteFreq(step);
+    const dur = bright ? 1.7 : 1.35;
+
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.19, t + 0.022);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    g.connect(master);
+
+    const o1 = actx.createOscillator();
+    o1.type = 'sine';
+    o1.frequency.setValueAtTime(f, t);
+    o1.connect(g);
+    o1.start(t); o1.stop(t + dur + 0.05);
+
+    // 轻微的琴弦泛音
+    const g2 = actx.createGain();
+    g2.gain.setValueAtTime(0.0001, t);
+    g2.gain.exponentialRampToValueAtTime(bright ? 0.075 : 0.035, t + 0.03);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.5);
+    g2.connect(master);
+
+    const o2 = actx.createOscillator();
+    o2.type = 'triangle';
+    o2.frequency.setValueAtTime(f * 2.01, t);
+    o2.connect(g2);
+    o2.start(t); o2.stop(t + dur * 0.55);
+
+    if (bright) {
+      const g3 = actx.createGain();
+      g3.gain.setValueAtTime(0.0001, t);
+      g3.gain.exponentialRampToValueAtTime(0.05, t + 0.02);
+      g3.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      g3.connect(master);
+      const o3 = actx.createOscillator();
+      o3.type = 'sine';
+      o3.frequency.setValueAtTime(f * 3.01, t);
+      o3.connect(g3);
+      o3.start(t); o3.stop(t + 0.95);
+    }
+  }
+
+  function playThud() {
+    if (!actx || muted) return;
+    const t = actx.currentTime;
+    const o = actx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(46, t + 0.34);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.20, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.44);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.48);
+  }
+
+  function playEmit() {
+    if (!actx || muted) return;
+    const t = actx.currentTime;
+    const o = actx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(420, t);
+    o.frequency.exponentialRampToValueAtTime(760, t + 0.28);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.035, t + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.34);
+  }
+
+  function playEmpty() {
+    if (!actx || muted) return;
+    const t = actx.currentTime;
+    const o = actx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(205, t);
+    o.frequency.exponentialRampToValueAtTime(150, t + 0.09);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.035, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.14);
+  }
+
+  setMuteEl.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    muted = !muted;
+    setMuteEl.classList.toggle('off', muted);
+    setMuteEl.textContent = muted ? '×' : '♪';
+    if (!muted) { resumeAudio(); playNote(2, true); }
+  });
+
+  /* =========================================================
+     时钟
+     ========================================================= */
+  let timeOffset = 0;
+  let hiddenAt = 0;
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      hiddenAt = performance.now();
+    } else if (hiddenAt) {
+      timeOffset += (performance.now() - hiddenAt) / 1000;
+      hiddenAt = 0;
+    }
+  });
+
+  const now = () => performance.now() / 1000 - timeOffset;
+
+  /* =========================================================
+     古柏与丹陛（离屏预渲染，同样在像素栅格上）
+     ========================================================= */
+  let sceneryCanvas = null;
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // 逐行堆出来的柏树剪影，天然带锯齿
+  function drawCypress(g, x, baseY, h, w, alpha) {
+    const bx = Math.round(x);
+    const by = Math.round(baseY);
+    g.globalAlpha = alpha;
+    for (let i = 0; i < h; i++) {
+      const t = i / h;
+      let half = Math.round(w * Math.pow(t, 0.72));
+      half += ((i * 7919 + (bx | 0)) % 3) - 1;
+      if (half < 0) half = 0;
+      const y = by - h + i;
+      const shade = i < h * 0.35 ? PAL.songLt : PAL.song;
+      g.fillStyle = shade;
+      g.fillRect(bx - half, y, half * 2 + 1, 1);
+    }
+    // 树干
+    g.fillStyle = '#20180f';
+    g.fillRect(bx, by - 2, 1, 3);
+    g.globalAlpha = 1;
+  }
+
+  function makeScenery() {
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
+    const g = c.getContext('2d');
+    g.imageSmoothingEnabled = false;
+
+    const hz = Math.round(H * 0.235);
+    const gy0 = Math.round(cy + RY + wallW * 0.35);
+
+    // 丹陛桥：从门洞向外铺开，压得比地面还沉一点
+    const y1 = H + 2;
+    const w0 = Math.max(3, Math.round(RX * 0.095));
+    const w1 = Math.round(W * 0.150);
+    for (let y = gy0; y < y1; y++) {
+      const t = (y - gy0) / (y1 - gy0);
+      const ww = Math.round(lerp(w0, w1, Math.pow(t, 0.82)));
+      g.fillStyle = (t < 0.35) ? '#211a2c' : (t < 0.7 ? '#1c1626' : '#181322');
+      g.fillRect(Math.round(cx) - ww, y, ww * 2, 1);
+    }
+    // 石缝
+    for (let i = 1; i <= 7; i++) {
+      const k = Math.pow(i / 8, 0.8);
+      const yy = Math.round(lerp(gy0, y1, k));
+      const ww = Math.round(lerp(w0, w1, k));
+      g.fillStyle = '#100c18';
+      g.fillRect(Math.round(cx) - ww, yy, ww * 2, 1);
+    }
+    // 桥侧压边
+    for (let y = gy0; y < y1; y++) {
+      const t = (y - gy0) / (y1 - gy0);
+      const ww = Math.round(lerp(w0, w1, Math.pow(t, 0.82)));
+      g.fillStyle = '#0c0912';
+      g.fillRect(Math.round(cx) - ww - 1, y, 1, 1);
+      g.fillRect(Math.round(cx) + ww, y, 1, 1);
+    }
+
+    const rnd = mulberry32(20241125);
+
+    // 地平线上的柏林
+    const nHz = Math.max(20, Math.round(W / 9));
+    for (let i = 0; i < nHz; i++) {
+      const x = (i + 0.5) / nHz * W + (rnd() - 0.5) * W * 0.06;
+      const h = Math.round(9 + rnd() * 15);
+      drawCypress(g, x, hz + 2, h, h * (0.30 + rnd() * 0.12), 0.9);
+    }
+
+    // 庭院外墙根一带的小柏
+    const nBack = Math.max(14, Math.round(W / 14));
+    for (let i = 0; i < nBack; i++) {
+      const x = (i + 0.5) / nBack * W + (rnd() - 0.5) * W * 0.05;
+      if (Math.abs(x - cx) < W * 0.19) continue;
+      const h = Math.round(10 + rnd() * 14);
+      const by = gy0 + 6 + rnd() * 20;
+      drawCypress(g, x, by, h, h * (0.28 + rnd() * 0.10), 0.7);
+    }
+
+    // 近景柏树：只占两侧，中间留给丹陛桥
+    const nFront = Math.max(10, Math.round(W / 24));
+    const halfN = Math.max(1, Math.ceil(nFront / 2) - 1);
+    for (let i = 0; i < nFront; i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+      const t = Math.floor(i / 2) / halfN;
+      const inset = W * (0.30 + t * 0.20);
+      const x = cx + side * inset + (rnd() - 0.5) * 10;
+      const h = Math.round(44 + rnd() * 40);
+      const by = H + 2 + rnd() * 10;
+      drawCypress(g, x, by, h, h * (0.17 + rnd() * 0.06), 1);
+    }
+
+    // 底部压暗：只留淡淡一圈，不用点阵噪（会像电视雪花）
+    g.fillStyle = 'rgba(6,4,10,.55)';
+    g.fillRect(0, Math.round(H * 0.955), W, H - Math.round(H * 0.955));
+
+    sceneryCanvas = c;
+  }
+
+  /* ---------- 纸纹 + 暗角（一次性预渲染） ---------- */
+  let overlayCanvas = null;
+
+  function makeOverlay() {
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
+    const g = c.getContext('2d');
+
+    // 绢本颗粒
+    const rnd = mulberry32(778899);
+    const dots = Math.round(W * H * 0.10);
+    for (let i = 0; i < dots; i++) {
+      const x = Math.floor(rnd() * W);
+      const y = Math.floor(rnd() * H);
+      g.fillStyle = rnd() < 0.55 ? 'rgba(230,223,200,.045)' : 'rgba(0,0,0,.11)';
+      g.fillRect(x, y, 1, 1);
+    }
+
+    // 暗角：阶梯式
+    const vx = W * 0.5;
+    const vy = H * 0.46;
+    const maxR = Math.max(W, H) * 0.80;
+    const steps = 5;
+    for (let i = 0; i < steps; i++) {
+      const r0 = maxR * (0.40 + i * 0.12);
+      g.beginPath();
+      g.rect(0, 0, W, H);
+      g.arc(vx, vy, r0, 0, TAU, true);
+      g.fillStyle = 'rgba(4,3,8,.062)';
+      g.fill('evenodd');
+    }
+
+    overlayCanvas = c;
+  }
+
+  /* =========================================================
+     游戏状态
+     ========================================================= */
+  const TOTAL_WAVES = 24;
+  const START_HEARTS = 6;
+  const MAX_HEARTS = 6;
+  const REFILL_COMBO = 10;
+
+  const G = {
+    mode: 'title',
+    score: 0,
+    combo: 0,
+    best: 0,
+    hits: 0,
+    spawned: 0,
+    perfect: 0,
+    hearts: START_HEARTS,
+    wave: 0,
+    curWin: 0.5,
+    pulses: [],
+    fx: [],
+    glow: new Float32Array(SEG),
+    nextWaveAt: 0,
+    comboAt: -9,
+    flash: 0,
+    flashColor: '255,110,80',
+    startedAt: 0,
+    waveLost: false,
+    finished: false,
+    refilledAt: -9
+  };
+
+  function waveConfig(n) {
+    const lap = Math.max(1.70, 2.50 - n * 0.045);
+    let count = 1;
+    if (n >= 7 && n % 5 === 2) count = 2;
+    if (n >= 12 && n % 6 === 3) count = 3;
+    return { lap, count, speed: TAU / lap };
+  }
+
+  function emitWave(t) {
+    const cfg = waveConfig(G.wave);
+    const factors =
+      cfg.count === 1 ? [1] :
+      cfg.count === 2 ? [1, 0.86] :
+                        [1, 0.87, 0.77];
+
+    G.curWin = Math.max(0.38, 0.50 - G.wave * 0.005);
+    G.waveLost = false;
+
+    for (let i = 0; i < factors.length; i++) {
+      G.pulses.push({
+        t0: t,
+        speed: cfg.speed * factors[i],
+        win: G.curWin
+      });
+      G.spawned++;
+    }
+    G.wave++;
+    playEmit();
+  }
+
+  function doCatch(p, t, err) {
+    const perfect = err <= p.win * 0.34;
+    const prevHearts = G.hearts;
+
+    G.combo++;
+    if (G.combo > G.best) G.best = G.combo;
+    G.hits++;
+    if (perfect) G.perfect++;
+
+    // 连响十声，添一盏灯
+    if (G.combo % REFILL_COMBO === 0 && G.hearts < MAX_HEARTS) {
+      G.hearts++;
+      G.refilledAt = t;
+      spawnText(0, -26, '添灯', PAL.jin);
+    }
+
+    const mult = 1 + Math.min(G.combo - 1, 20) * 0.1;
+    G.score += Math.round((perfect ? 120 : 70) * mult);
+
+    G.comboAt = t;
+    G.flash = 0.45;
+    G.flashColor = '240,200,120';
+
+    spawnFx(perfect);
+    playNote(G.combo - 1, perfect);
+  }
+
+  function doMiss(t) {
+    G.combo = 0;
+
+    if (!G.waveLost) {
+      G.waveLost = true;
+      G.hearts--;
+      G.flash = 1;
+      G.flashColor = '200,70,50';
+      spawnText(0, -20, '声散', PAL.zhuLt);
+      playThud();
+      if (G.hearts <= 0) { G.hearts = 0; gameOver(false); }
+    } else {
+      G.flash = 0.5;
+      G.flashColor = '150,60,45';
+      playEmpty();
+    }
+  }
+
+  function tap(t) {
+    if (G.mode !== 'playing') return;
+
+    let best = null, bestErr = Infinity;
+    for (let i = 0; i < G.pulses.length; i++) {
+      const p = G.pulses[i];
+      const prog = p.speed * (t - p.t0);
+      const err = Math.abs(prog - TAU);
+      if (err <= p.win && err < bestErr) { best = p; bestErr = err; }
+    }
+
+    if (best) {
+      const idx = G.pulses.indexOf(best);
+      if (idx >= 0) G.pulses.splice(idx, 1);
+      doCatch(best, t, bestErr);
+    } else {
+      if (G.combo > 0) G.combo = 0;
+      playEmpty();
+    }
+  }
+
+  /* ---------- 特效 ---------- */
+  function playerArtPos(k) {
+    k = k === undefined ? 0.92 : k;
+    return {
+      x: cx + RX * k * Math.cos(PLAYER_ANG),
+      y: cy + RY * k * Math.sin(PLAYER_ANG)
+    };
+  }
+
+  function spawnFx(perfect) {
+    const t = now();
+    const p = playerArtPos(0.94);
+    G.fx.push({ kind: 'ring', x: p.x, y: p.y, t0: t, dur: 0.7, r0: 4, r1: perfect ? 46 : 32, c: perfect ? PAL.jin : PAL.qingLt });
+    for (let i = 0; i < (perfect ? 12 : 7); i++) {
+      const a = Math.random() * TAU;
+      const sp = 18 + Math.random() * 46;
+      G.fx.push({
+        kind: 'spark', x: p.x, y: p.y,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 12,
+        t0: t, dur: 0.5 + Math.random() * 0.4,
+        c: perfect ? PAL.jin : PAL.yuebai
+      });
+    }
+  }
+
+  function spawnText(dx, dy, txt, c) {
+    const t = now();
+    const p = playerArtPos(0.94);
+    G.fx.push({ kind: 'text', x: p.x + dx, y: p.y + dy, t0: t, dur: 0.95, txt: txt, c: c });
+  }
+
+  /* =========================================================
+     主循环
+     ========================================================= */
+  let lastT = 0;
+
+  function loop(ts) {
+    try {
+      const t = now();
+      let dt = ts / 1000 - lastT;
+      if (!isFinite(dt) || dt < 0) dt = 0;
+      dt = Math.min(dt, 0.05);
+      lastT = ts / 1000;
+      update(t, dt);
+      render(t, dt);
+    } catch (e) {
+      console.error('loop error', e);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function update(t, dt) {
+    const decay = dt * 4.0;
+    for (let i = 0; i < SEG; i++) {
+      const v = G.glow[i] - decay;
+      G.glow[i] = v > 0 ? v : 0;
+    }
+    G.flash = Math.max(0, G.flash - dt * 2.8);
+
+    if (G.mode !== 'playing') return;
+
+    for (let i = G.pulses.length - 1; i >= 0; i--) {
+      const p = G.pulses[i];
+      const prog = p.speed * (t - p.t0);
+      if (prog > TAU + p.win) {
+        G.pulses.splice(i, 1);
+        doMiss(t);
+        if (G.mode !== 'playing') return;
+      }
+    }
+
+    for (let i = 0; i < G.pulses.length; i++) {
+      const p = G.pulses[i];
+      const prog = p.speed * (t - p.t0);
+      const a = PLAYER_ANG + prog;
+      let idx = Math.floor((a / TAU) * SEG) % SEG;
+      if (idx < 0) idx += SEG;
+      G.glow[idx] = 1;
+    }
+
+    if (G.pulses.length === 0) {
+      if (G.wave >= TOTAL_WAVES) {
+        if (G.nextWaveAt === 0) G.nextWaveAt = t + 0.6;
+        else if (t >= G.nextWaveAt) { G.nextWaveAt = 0; gameOver(true); return; }
+      } else if (G.nextWaveAt === 0) {
+        G.nextWaveAt = t + 0.5;
+      } else if (t >= G.nextWaveAt) {
+        G.nextWaveAt = 0;
+        emitWave(t);
+      }
+    }
+  }
+
+  /* =========================================================
+     绘制（美术像素坐标）
+     ========================================================= */
+  function render(t, dt) {
+    drawSky(t);
+    drawGround();
+    if (sceneryCanvas) ctx.drawImage(sceneryCanvas, 0, 0);
+    drawPath();
+    drawHall(t);
+    drawWall(t);
+    if (G.mode === 'playing') drawGate(t);
+    drawPulses(t);
+    drawFxArt(t);
+    if (G.mode !== 'title') drawPlayer(t);
+    if (overlayCanvas) ctx.drawImage(overlayCanvas, 0, 0);
+
+    // 放大到屏幕
+    octx.fillStyle = PAL.ink;
+    octx.fillRect(0, 0, outCvs.width, outCvs.height);
+    octx.drawImage(pcvs, 0, 0, W, H, BOX.x, BOX.y, BOX.w, BOX.h);
+
+    drawHUD(t);
+    drawFxText(t);
+  }
+
+  function drawSky(t) {
+    const hz = Math.round(H * 0.235);   // 地平线
+
+    // 天：三段硬边夜色
+    ctx.fillStyle = '#0a0812';
+    ctx.fillRect(0, 0, W, Math.round(hz * 0.42));
+    ctx.fillStyle = PAL.ink;
+    ctx.fillRect(0, Math.round(hz * 0.42), W, Math.round(hz * 0.30));
+    ctx.fillStyle = PAL.night;
+    ctx.fillRect(0, Math.round(hz * 0.72), W, hz - Math.round(hz * 0.72));
+
+    // 地：一整块暗色，避免任何横向接缝
+    ctx.fillStyle = '#0f0b18';
+    ctx.fillRect(0, hz, W, H - hz);
+    // 地平线处的薄霭
+    ctx.fillStyle = '#151026';
+    ctx.fillRect(0, hz, W, Math.max(2, Math.round(H * 0.012)));
+    ctx.fillStyle = '#120d20';
+    ctx.fillRect(0, hz + Math.max(2, Math.round(H * 0.012)), W, Math.max(2, Math.round(H * 0.02)));
+
+    // 星（只在天上）
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
+      if (s.y >= hz - 2) continue;
+      const a = s.a * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
+      ctx.fillStyle = 'rgba(230,223,200,' + a.toFixed(2) + ')';
+      ctx.fillRect(s.x, s.y, 1, 1);
+    }
+
+    // 月
+    const mx = Math.round(W * 0.77);
+    const my = Math.round(hz * 0.42);
+    ctx.fillStyle = 'rgba(230,223,200,.08)';
+    ctx.beginPath(); ctx.arc(mx, my, 8, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(230,223,200,.16)';
+    ctx.beginPath(); ctx.arc(mx, my, 6, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#d8d1b8';
+    ctx.beginPath(); ctx.arc(mx, my, 4.3, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#b9b199';
+    ctx.fillRect(mx - 2, my - 1, 2, 1);
+    ctx.fillRect(mx + 1, my + 1, 1, 2);
+  }
+
+  function drawGround() {
+    // 庭院外的月光地：阶梯式同心带（像素画不用平滑渐变）
+    const outer = [
+      [2.30, '#0d0a15'],
+      [1.95, '#110d1c'],
+      [1.62, '#151024'],
+      [1.34, '#19132b'],
+      [1.12, '#1d1633']
+    ];
+    for (let i = 0; i < outer.length; i++) {
+      ctx.fillStyle = outer[i][1];
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, RX * outer[i][0], RY * outer[i][0], 0, 0, TAU);
+      ctx.fill();
+    }
+
+    // 庭院内地面
+    ctx.fillStyle = '#241d3c';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, RX * 1.00, RY * 1.00, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.fillStyle = '#2b2246';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + RY * 0.05, RX * 0.74, RY * 0.74, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.fillStyle = '#332a52';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + RY * 0.08, RX * 0.44, RY * 0.44, 0, 0, TAU);
+    ctx.fill();
+
+    // 铺地石圈
+    for (let k = 1; k <= 3; k++) {
+      const f = 0.24 + k * 0.17;
+      ctx.strokeStyle = 'rgba(150,160,200,.10)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, RX * f, RY * f, 0, 0, TAU);
+      ctx.stroke();
+    }
+  }
+
+  function drawPath() {
+    const y0 = cy + RY * 0.30;
+    const y1 = cy + RY * 0.99;
+    const w0 = Math.max(2, RX * 0.050);
+    const w1 = RX * 0.085;
+
+    const steps = Math.max(4, Math.round(y1 - y0));
+    for (let i = 0; i < steps; i++) {
+      const t = i / steps;
+      const ww = Math.round(lerp(w0, w1, t));
+      ctx.fillStyle = t < 0.6 ? '#3a3348' : '#453d55';
+      ctx.fillRect(Math.round(cx) - ww, Math.round(lerp(y0, y1, t)), ww * 2, 1);
+    }
+
+    // 三音石
+    for (let i = 0; i < 3; i++) {
+      const k = 0.36 + i * 0.21;
+      const y = Math.round(lerp(y0, y1, k));
+      const s = Math.max(1, Math.round(lerp(w0, w1, k) * 0.55));
+      ctx.fillStyle = '#8f8878';
+      ctx.fillRect(Math.round(cx) - s, y, s * 2, 2);
+    }
+  }
+
+  function drawHall(t) {
+    const rr = RX * 0.245;
+    const ry = RY * 0.245;
+
+    // 月台（三级）
+    for (let i = 2; i >= 0; i--) {
+      const f = 0.335 - i * 0.020;
+      ctx.fillStyle = ['#3b3550', '#474160', '#544d6e'][i];
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + RY * 0.014 * i, RX * f, RY * f, 0, 0, TAU);
+      ctx.fill();
+    }
+
+    // 殿顶：三段石青
+    const rings = [
+      [1.00, '#1d3448'],
+      [0.80, '#284a63'],
+      [0.58, '#356180'],
+      [0.30, '#4d87a3']
+    ];
+    for (let i = 0; i < rings.length; i++) {
+      ctx.fillStyle = rings[i][1];
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rr * rings[i][0], ry * rings[i][0], 0, 0, TAU);
+      ctx.fill();
+    }
+
+    // 瓦垄
+    ctx.strokeStyle = 'rgba(10,20,32,.55)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * TAU;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * rr * 0.18, cy + Math.sin(a) * ry * 0.18);
+      ctx.lineTo(cx + Math.cos(a) * rr * 0.96, cy + Math.sin(a) * ry * 0.96);
+      ctx.stroke();
+    }
+
+    // 檐口
+    ctx.strokeStyle = '#7fb0c9';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rr, ry, 0, 0, TAU);
+    ctx.stroke();
+
+    // 宝顶
+    const pulse = 0.8 + 0.2 * Math.sin(t * 1.6);
+    ctx.fillStyle = 'rgba(240,201,106,' + (0.16 * pulse).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(cx, cy, rr * 0.42, 0, TAU); ctx.fill();
+    ctx.fillStyle = PAL.jin;
+    ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.6, rr * 0.13), 0, TAU); ctx.fill();
+    ctx.fillStyle = '#fff3cf';
+    ctx.fillRect(Math.round(cx) - 1, Math.round(cy) - 1, 1, 1);
+  }
+
+  // 墙面：按角度切片上色（光来自下方观者），并在声波经过处点亮
+  function wallSlice(i) {
+    const a0 = (i / SEG) * TAU;
+    const a1 = ((i + 1) / SEG) * TAU;
+    return [a0, a1];
+  }
+
+  function drawWall() {
+    const rout = 0.5;
+    const yTop = cy - RY;
+
+    // 内壁落影（先铺在地面上）
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + wallW * 0.18, RX - wallW * 0.55, RY - wallW * 0.55, 0, Math.PI, TAU);
+    ctx.lineWidth = wallW * 1.1;
+    ctx.strokeStyle = 'rgba(0,0,0,.45)';
+    ctx.stroke();
+    ctx.restore();
+
+    const dark = [0x43, 0x14, 0x0f];
+    const mid = [0x8f, 0x33, 0x24];
+    const lite = [0xb2, 0x48, 0x2f];
+    const glowCol = [0xe0, 0xa5, 0x60];
+
+    for (let i = 0; i < SEG; i++) {
+      const [a0, a1] = wallSlice(i);
+      const am = (a0 + a1) * 0.5;
+      // 下方（观者侧）更亮
+      let k = (Math.sin(am) + 1) * 0.5;
+      k = Math.pow(k, 1.25);
+
+      let r = Math.round(lerp(dark[0], lite[0], k));
+      let gg = Math.round(lerp(dark[1], lite[1], k));
+      let b = Math.round(lerp(dark[2], lite[2], k));
+
+      const gl = G.glow[i];
+      if (gl > 0.02) {
+        const f = Math.min(1, gl);
+        r = Math.round(lerp(r, glowCol[0], f * 0.8));
+        gg = Math.round(lerp(gg, glowCol[1], f * 0.8));
+        b = Math.round(lerp(b, glowCol[2], f * 0.8));
+      }
+
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, RX + wallW * rout, RY + wallW * rout, 0, a0, a1);
+      ctx.ellipse(cx, cy, RX - wallW * rout, RY - wallW * rout, 0, a1, a0, true);
+      ctx.closePath();
+      ctx.fillStyle = 'rgb(' + r + ',' + gg + ',' + b + ')';
+      ctx.fill();
+    }
+
+    // 蓝琉璃瓦顶：外缘的压顶
+    for (let i = 0; i < SEG; i++) {
+      const [a0, a1] = wallSlice(i);
+      const am = (a0 + a1) * 0.5;
+      const k = (Math.sin(am) + 1) * 0.5;
+      const rr = Math.round(lerp(0x18, 0x36, k));
+      const gg = Math.round(lerp(0x27, 0x58, k));
+      const b = Math.round(lerp(0x3c, 0x78, k));
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, RX + wallW * rout, RY + wallW * rout, 0, a0, a1);
+      ctx.ellipse(cx, cy, RX + wallW * 0.10, RY + wallW * 0.10, 0, a1, a0, true);
+      ctx.closePath();
+      ctx.fillStyle = 'rgb(' + rr + ',' + gg + ',' + b + ')';
+      ctx.fill();
+    }
+
+    // 墨线勾边
+    ctx.strokeStyle = 'rgba(8,6,14,.75)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(cx, cy, RX + wallW * rout, RY + wallW * rout, 0, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx, cy, RX - wallW * rout, RY - wallW * rout, 0, 0, TAU); ctx.stroke();
+
+    // 砖缝（只画在朱红墙身上）
+    ctx.strokeStyle = 'rgba(10,7,14,.35)';
+    for (let i = 0; i < SEG; i += 2) {
+      const a = (i / SEG) * TAU;
+      const p1x = cx + (RX - wallW * rout) * Math.cos(a);
+      const p1y = cy + (RY - wallW * rout) * Math.sin(a);
+      const p2x = cx + (RX + wallW * 0.10) * Math.cos(a);
+      const p2y = cy + (RY + wallW * 0.10) * Math.sin(a);
+      ctx.beginPath();
+      ctx.moveTo(p1x, p1y);
+      ctx.lineTo(p2x, p2y);
+      ctx.stroke();
+    }
+
+    // 瓦垄：琉璃瓦上的短缝
+    ctx.strokeStyle = 'rgba(6,14,22,.45)';
+    for (let i = 0; i < SEG; i += 2) {
+      const a = (i / SEG) * TAU;
+      const p1x = cx + (RX + wallW * 0.13) * Math.cos(a);
+      const p1y = cy + (RY + wallW * 0.13) * Math.sin(a);
+      const p2x = cx + (RX + wallW * (rout - 0.04)) * Math.cos(a);
+      const p2y = cy + (RY + wallW * (rout - 0.04)) * Math.sin(a);
+      ctx.beginPath();
+      ctx.moveTo(p1x, p1y);
+      ctx.lineTo(p2x, p2y);
+      ctx.stroke();
+    }
+  }
+
+  function drawGate(t) {
+    const w = G.curWin;
+
+    let near = 0;
+    for (let i = 0; i < G.pulses.length; i++) {
+      const p = G.pulses[i];
+      const prog = p.speed * (t - p.t0);
+      const d = Math.abs(prog - TAU);
+      if (d < 0.95) near = Math.max(near, 1 - d / 0.95);
+    }
+
+    // 门洞：一段发亮的墙
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, RX + wallW * 0.5, RY + wallW * 0.5, 0, PLAYER_ANG - w, PLAYER_ANG + w);
+    ctx.ellipse(cx, cy, RX - wallW * 0.5, RY - wallW * 0.5, 0, PLAYER_ANG + w, PLAYER_ANG - w, true);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(240,201,106,' + (0.10 + near * 0.30).toFixed(2) + ')';
+    ctx.fill();
+    ctx.restore();
+
+    // 门柱
+    for (let s = -1; s <= 1; s += 2) {
+      const a = PLAYER_ANG + s * w;
+      const p1x = cx + (RX - wallW * 0.8) * Math.cos(a);
+      const p1y = cy + (RY - wallW * 0.8) * Math.sin(a);
+      const p2x = cx + (RX + wallW * 0.8) * Math.cos(a);
+      const p2y = cy + (RY + wallW * 0.8) * Math.sin(a);
+      ctx.strokeStyle = 'rgba(255,230,170,' + (0.55 + near * 0.4).toFixed(2) + ')';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(p1x, p1y); ctx.lineTo(p2x, p2y); ctx.stroke();
+    }
+  }
+
+  function drawPulses(t) {
+    for (let i = 0; i < G.pulses.length; i++) {
+      const p = G.pulses[i];
+      const prog = p.speed * (t - p.t0);
+      if (prog < 0) continue;
+
+      // 拖尾：单像素点
+      const TAIL = 10;
+      for (let k = TAIL; k >= 1; k--) {
+        const pk = prog - k * 0.022 * p.speed;
+        if (pk < 0) continue;
+        const a = PLAYER_ANG + pk;
+        const x = Math.round(cx + RX * Math.cos(a));
+        const y = Math.round(cy + RY * Math.sin(a));
+        const f = 1 - k / (TAIL + 1);
+        ctx.fillStyle = 'rgba(120,180,220,' + (f * f * 0.5).toFixed(2) + ')';
+        ctx.fillRect(x - (f > 0.6 ? 1 : 0), y - (f > 0.6 ? 1 : 0), f > 0.6 ? 3 : 2, f > 0.6 ? 3 : 2);
+      }
+
+      // 头部：3x3 像素团
+      const a = PLAYER_ANG + prog;
+      const x = Math.round(cx + RX * Math.cos(a));
+      const y = Math.round(cy + RY * Math.sin(a));
+      const pulse = 0.75 + 0.25 * Math.sin(t * 12 + i);
+
+      ctx.fillStyle = 'rgba(150,205,240,' + (0.30 * pulse).toFixed(2) + ')';
+      ctx.fillRect(x - 3, y - 3, 7, 7);
+      ctx.fillStyle = 'rgba(190,225,250,' + (0.65 * pulse).toFixed(2) + ')';
+      ctx.fillRect(x - 2, y - 2, 5, 5);
+      ctx.fillStyle = '#f2fbff';
+      ctx.fillRect(x - 1, y - 1, 3, 3);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  function drawFxArt(t) {
+    for (let i = G.fx.length - 1; i >= 0; i--) {
+      const f = G.fx[i];
+      const p = (t - f.t0) / f.dur;
+      if (p >= 1) { G.fx.splice(i, 1); continue; }
+      if (f.kind === 'text') continue;
+      const e = 1 - p;
+
+      if (f.kind === 'ring') {
+        const r = lerp(f.r0, f.r1, 1 - e * e);
+        ctx.strokeStyle = f.c;
+        ctx.globalAlpha = e * e * 0.8;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(f.x, f.y, r, 0, TAU); ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else {
+        const x = Math.round(f.x + f.vx * p);
+        const y = Math.round(f.y + f.vy * p + 22 * p * p);
+        ctx.fillStyle = f.c;
+        ctx.globalAlpha = e * 0.9;
+        ctx.fillRect(x, y, 1, 1);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  function drawPlayer(t) {
+    const p = playerArtPos(0.92);
+    const x = Math.round(p.x);
+    const y = Math.round(p.y);
+    const breathe = 0.85 + 0.15 * Math.sin(t * 2.2);
+
+    // 灯光洒地
+    ctx.fillStyle = 'rgba(240,190,110,' + (0.10 * breathe).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(x, y + 1, 13, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(240,190,110,' + (0.08 * breathe).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(x, y + 1, 7, 0, TAU); ctx.fill();
+
+    // 影子
+    ctx.fillStyle = 'rgba(0,0,0,.45)';
+    ctx.fillRect(x - 2, y + 1, 5, 1);
+
+    // 人：约 8px 高
+    ctx.fillStyle = '#20182a';
+    ctx.fillRect(x - 1, y - 5, 3, 1);        // 头
+    ctx.fillRect(x - 2, y - 4, 5, 3);        // 身
+    ctx.fillRect(x - 2, y - 1, 1, 2);        // 左腿
+    ctx.fillRect(x + 1, y - 1, 1, 2);        // 右腿
+    ctx.fillStyle = '#e6dfc8';
+    ctx.fillRect(x - 1, y - 5, 2, 1);        // 头亮面
+    ctx.fillRect(x - 1, y - 4, 2, 2);        // 衣亮面
+    ctx.fillStyle = '#a8402c';
+    ctx.fillRect(x - 1, y - 2, 2, 1);        // 腰带
+
+    // 提灯
+    const lx = x + 3;
+    const ly = y - 3;
+    ctx.fillStyle = 'rgba(255,225,150,' + (0.22 * breathe).toFixed(2) + ')';
+    ctx.fillRect(lx - 2, ly - 2, 5, 5);
+    ctx.fillStyle = '#f0c96a';
+    ctx.fillRect(lx - 1, ly - 1, 3, 3);
+    ctx.fillStyle = '#fff8dd';
+    ctx.fillRect(lx, ly, 1, 1);
+  }
+
+  function drawVignette() {
+    // 四角压暗，用色带而非渐变
+    for (let i = 0; i < 3; i++) {
+      const a = 0.10 + i * 0.05;
+      ctx.strokeStyle = 'rgba(5,4,10,' + a.toFixed(2) + ')';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1 + i * 2, 1 + i * 2, W - 2 - i * 4, H - 2 - i * 4);
+    }
+  }
+
+  /* =========================================================
+     HUD（在输出画布上以真实分辨率绘制，保证中文字清晰）
+     ========================================================= */
+  function drawHUD(t) {
+    if (G.mode === 'title') return;
+
+    const sw = BOX.w;
+    const pad = Math.round(sw * 0.055);
+    const x0 = BOX.x + pad;
+    const y0 = BOX.y + pad * 0.85;
+
+    octx.textAlign = 'left';
+    octx.textBaseline = 'top';
+
+    octx.font = '10px "Songti SC","STSong","SimSun",serif';
+    octx.fillStyle = 'rgba(232,224,201,.42)';
+    octx.fillText('回 响', x0, y0);
+
+    octx.font = '26px "Songti SC","STSong","SimSun",serif';
+    octx.fillStyle = PAL.jin;
+    octx.fillText(String(G.score), x0, y0 + 14);
+
+    // 六盏灯（留出右上静音键位置）
+    const gap = Math.max(11, sw * 0.032);
+    const hx = BOX.x + BOX.w - Math.round(sw * 0.145) - (MAX_HEARTS - 1) * gap;
+    const hy = y0 + 21;
+    for (let i = 0; i < MAX_HEARTS; i++) {
+      const x = hx + i * gap;
+      if (i < G.hearts) {
+        octx.fillStyle = 'rgba(240,201,106,.20)';
+        octx.beginPath(); octx.arc(x, hy, 6.5, 0, TAU); octx.fill();
+        octx.fillStyle = PAL.jin;
+        octx.beginPath(); octx.arc(x, hy, 2.6, 0, TAU); octx.fill();
+      } else {
+        octx.fillStyle = 'rgba(232,224,201,.13)';
+        octx.beginPath(); octx.arc(x, hy, 2.2, 0, TAU); octx.fill();
+      }
+    }
+
+    // 进度：第几声
+    const progW = Math.round(sw * 0.34);
+    const progX = BOX.x + (BOX.w - progW) / 2;
+    const progY = y0 + 3;
+    octx.fillStyle = 'rgba(232,224,201,.10)';
+    octx.fillRect(progX, progY, progW, 2);
+    octx.fillStyle = 'rgba(217,164,65,.55)';
+    octx.fillRect(progX, progY, Math.round(progW * Math.min(1, G.wave / TOTAL_WAVES)), 2);
+    octx.font = '9px "Songti SC","STSong","SimSun",serif';
+    octx.fillStyle = 'rgba(232,224,201,.34)';
+    octx.textAlign = 'center';
+    octx.fillText('第 ' + Math.min(G.wave, TOTAL_WAVES) + ' / ' + TOTAL_WAVES + ' 声', progX + progW / 2, progY + 7);
+    octx.textAlign = 'left';
+
+    // 连响
+    if (G.combo >= 2) {
+      const p = playerArtPos(0.92);
+      const k = Math.exp(-(t - G.comboAt) * 8);
+      const sc = 1 + 0.3 * k;
+      octx.save();
+      octx.translate(toSX(p.x), toSY(p.y) + 40 * S);
+      octx.scale(sc, sc);
+      octx.textAlign = 'center';
+      octx.textBaseline = 'middle';
+      octx.font = '30px "Songti SC","STSong","SimSun",serif';
+      octx.fillStyle = 'rgba(240,201,106,' + (0.55 + 0.4 * k).toFixed(2) + ')';
+      octx.fillText('×' + G.combo, 0, 0);
+      octx.font = '9px "Songti SC","STSong","SimSun",serif';
+      octx.fillStyle = 'rgba(232,224,201,.32)';
+      octx.fillText('连 响', 0, 22);
+      octx.restore();
+    }
+
+    // 开局提示
+    if (G.mode === 'playing' && G.wave <= 1 && G.hits === 0) {
+      const p = playerArtPos(0.92);
+      const a = 0.45 + 0.3 * Math.sin(t * 2.6);
+      octx.save();
+      octx.textAlign = 'center';
+      octx.textBaseline = 'top';
+      octx.font = '12px "Songti SC","STSong","SimSun",serif';
+      octx.fillStyle = 'rgba(232,224,201,' + a.toFixed(2) + ')';
+      octx.fillText('等它绕墙一周，回到门下', toSX(p.x), toSY(p.y) + 62 * S);
+      octx.restore();
+    }
+
+    // 命中闪光
+    if (G.flash > 0) {
+      const a = G.flash * G.flash * 0.26;
+      octx.fillStyle = 'rgba(' + G.flashColor + ',' + a.toFixed(3) + ')';
+      octx.fillRect(BOX.x, BOX.y, BOX.w, BOX.h);
+    }
+  }
+
+  function drawFxText(t) {
+    for (let i = G.fx.length - 1; i >= 0; i--) {
+      const f = G.fx[i];
+      if (f.kind !== 'text') continue;
+      const p = (t - f.t0) / f.dur;
+      if (p >= 1) { G.fx.splice(i, 1); continue; }
+      const e = 1 - p;
+      octx.save();
+      octx.globalAlpha = Math.min(1, e * 1.9);
+      octx.font = '13px "Songti SC","STSong","SimSun",serif';
+      octx.textAlign = 'center';
+      octx.textBaseline = 'middle';
+      octx.fillStyle = f.c;
+      octx.fillText(f.txt, toSX(f.x), toSY(f.y) - p * 22);
+      octx.restore();
+    }
+  }
+
+  /* =========================================================
+     流程
+     ========================================================= */
+  const scrTitle = document.getElementById('scrTitle');
+  const scrResult = document.getElementById('scrResult');
+
+  function startGame() {
+    initAudio();
+    resumeAudio();
+
+    G.mode = 'playing';
+    G.score = 0;
+    G.combo = 0;
+    G.best = 0;
+    G.hits = 0;
+    G.spawned = 0;
+    G.perfect = 0;
+    G.hearts = START_HEARTS;
+    G.wave = 0;
+    G.pulses.length = 0;
+    G.fx.length = 0;
+    G.glow.fill(0);
+    G.nextWaveAt = 0;
+    G.curWin = 0.5;
+    G.comboAt = -9;
+    G.flash = 0;
+    G.waveLost = false;
+    G.startedAt = now();
+
+    scrTitle.classList.remove('on');
+    scrResult.classList.remove('on');
+
+    emitWave(now());
+  }
+
+  /* 开局轮换一条文化小识：玩几局就把天坛的底子摸清了 */
+  const FACTS = [
+    '天坛是明清皇帝祭天、祈谷的地方。1420 年建成时叫「天地坛」，1530 年天地分祀，才专用于祭天，定名天坛。',
+    '北京中轴线全长 7.8 公里。天坛在轴线东侧，先农坛在西侧，一东一西对称——一处祭天，一处祭农。',
+    '回音壁是皇穹宇的圆墙，直径 61.5 米、高 3.72 米。临清澄浆砖磨砖对缝，声音沿光滑墙面连续反射，六十余米外仍听得清。',
+    '祈年殿 28 根楠木柱：4 根应四季，12 根应十二月，12 根应十二时辰；24 根合二十四节气，28 根合二十八星宿。',
+    '祭天在冬至——阴极阳生的那天。古代十二律配十二月与二十四节气，冬至对应「黄钟」，史称「律历合一」。',
+    '圜丘坛的台阶、栏板、石板全是九或九的倍数。九为阳数之极，象征九重天。',
+    '皇穹宇殿前三块石板叫一音石、二音石、三音石，击掌分别得一、二、三声回响——游戏里的「三音」就出自此。',
+    '祭天奏「中和韶乐」，以金石土革丝木匏竹八音合奏，由天坛西侧的神乐署演习，2021 年列入国家级非遗。'
+  ];
+  let factIdx = 0;
+
+  function rankOf(ratio, survived) {
+    if (survived && ratio >= 0.92) return '声闻于天';
+    if (ratio >= 0.75) return '余音绕梁';
+    if (ratio >= 0.55) return '一壁清响';
+    if (ratio >= 0.30) return '初闻其声';
+    return '风过无声';
+  }
+
+  function gameOver(survived) {
+    G.mode = 'over';
+    G.pulses.length = 0;
+    G.finished = survived;
+
+    // 走完全程给「余音」奖励
+    if (survived) G.score += G.hearts * 200;
+
+    const ratio = G.spawned > 0 ? G.hits / G.spawned : 0;
+
+    document.getElementById('rRank').textContent = rankOf(ratio, survived);
+    document.getElementById('rScore').textContent = String(G.score);
+    document.getElementById('rHits').textContent = G.hits + '/' + G.spawned;
+    document.getElementById('rBest').textContent = String(G.best);
+    document.getElementById('rPerfect').textContent = String(G.perfect);
+    const fact = FACTS[factIdx % FACTS.length];
+    factIdx++;
+
+    document.getElementById('rFact').textContent =
+      (survived ? '余音未散 · 尚余 ' + G.hearts + ' 盏灯\n\n' : '') + '小识 · ' + fact;
+
+    setTimeout(() => scrResult.classList.add('on'), 480);
+  }
+
+  /* =========================================================
+     输入
+     ========================================================= */
+  window.addEventListener('pointerdown', (e) => {
+    if (e.target === setMuteEl || (e.target && e.target.closest && e.target.closest('.screen'))) return;
+    resumeAudio();
+    if (G.mode === 'playing') tap(now());
+  }, { passive: true });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      if (G.mode === 'playing') tap(now());
+    }
+  });
+
+  document.getElementById('startBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    startGame();
+  });
+
+  document.getElementById('againBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    startGame();
+  });
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', () => setTimeout(resize, 260));
+
+  /* =========================================================
+     启动
+     ========================================================= */
+  resize();
+  requestAnimationFrame((ts) => {
+    lastT = ts / 1000;
+    requestAnimationFrame(loop);
+  });
+
+})();
+</script>
+</body>
+</html>

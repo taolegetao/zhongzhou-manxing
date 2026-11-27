@@ -14,9 +14,13 @@
     --gold:#d9a441;
     --gold-lt:#f0c96a;
     --cinnabar:#a8402c;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-right:env(safe-area-inset-right,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --safe-left:env(safe-area-inset-left,0px);
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;overflow:hidden;background:#08060f;}
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#08060f;}
   body{
     font-family:"Songti SC","STSong","SimSun","Noto Serif SC","Source Han Serif SC",serif;
     color:var(--ink);
@@ -81,6 +85,7 @@
   .btn{
     margin-top:38px;
     padding:13px 44px;
+    min-height:48px;
     font-family:inherit;font-size:15px;
     letter-spacing:.48em;text-indent:.48em;
     color:var(--gold-lt);
@@ -88,6 +93,7 @@
     border:1px solid rgba(217,164,65,.40);
     border-radius:2px;
     cursor:pointer;
+    touch-action:manipulation;
     transition:background .22s, transform .1s, border-color .22s;
     box-shadow:0 0 26px rgba(217,164,65,.06), inset 0 0 20px rgba(217,164,65,.045);
   }
@@ -136,17 +142,23 @@
 
   #muteBtn{
     position:fixed;
-    top:max(14px,env(safe-area-inset-top));right:14px;
-    width:32px;height:32px;
+    top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));
+    width:42px;height:42px;
     display:flex;align-items:center;justify-content:center;
     font-size:12px;color:rgba(232,224,201,.42);
     border:1px solid rgba(232,224,201,.13);
     border-radius:2px;
-    z-index:30;cursor:pointer;
+    z-index:30;cursor:pointer;touch-action:manipulation;
     transition:.2s;
   }
   #muteBtn:active{transform:scale(.92);}
   #muteBtn.off{color:rgba(232,224,201,.16);border-color:rgba(232,224,201,.06);}
+  @media(max-width:480px){
+    .screen{padding:calc(24px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));}
+    .poem{font-size:13px;line-height:2.1;margin-top:22px;}
+    .btn{min-width:168px;}
+    .tiny{bottom:max(18px,calc(env(safe-area-inset-bottom) + 10px));}
+  }
 </style>
 </head>
 <body>
@@ -252,8 +264,9 @@
   }
 
   function resize() {
-    const cw = window.innerWidth;
-    const ch = window.innerHeight;
+    const viewport = window.visualViewport;
+    const cw = Math.round(viewport ? viewport.width : window.innerWidth);
+    const ch = Math.round(viewport ? viewport.height : window.innerHeight);
     DPR = Math.min(window.devicePixelRatio || 1, 3);
 
     // 舞台收成竖屏比例，宽屏两侧留墨
@@ -635,6 +648,97 @@
     refilledAt: -9
   };
 
+  // 12 张节气背景：每两波为一个视觉阶段，阈值按满连击得分曲线设定。
+  const BG_FADE_SECONDS = 0.42;
+  const SEASON_BACKGROUNDS = [
+    { term: '立春', src: '../echo/assets/seasonal/lichun.webp' },
+    { term: '雨水', src: '../echo/assets/seasonal/yushui.webp' },
+    { term: '春分', src: '../echo/assets/seasonal/chunfen.webp' },
+    { term: '立夏', src: '../echo/assets/seasonal/lixia.webp' },
+    { term: '小满', src: '../echo/assets/seasonal/xiaoman.webp' },
+    { term: '夏至', src: '../echo/assets/seasonal/xiazhi.webp' },
+    { term: '立秋', src: '../echo/assets/seasonal/liqiu.webp' },
+    { term: '处暑', src: '../echo/assets/seasonal/chushu.webp' },
+    { term: '秋分', src: '../echo/assets/seasonal/qiufen.webp' },
+    { term: '立冬', src: '../echo/assets/seasonal/lidong.webp' },
+    { term: '小雪', src: '../echo/assets/seasonal/xiaoxue.webp' },
+    { term: '冬至', src: '../echo/assets/seasonal/dongzhi.webp' }
+  ];
+  // 满连击时每两波的累计分数节点；容错失误会自然延后背景推进。
+  const BG_SCORE_THRESHOLDS = [0, 253, 553, 901, 1513, 1981, 2773, 3361, 4681, 5761, 6481, 8281];
+  const seasonImages = SEASON_BACKGROUNDS.map((item) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = item.src;
+    return image;
+  });
+  let activeBgIndex = 0;
+  let previousBgIndex = 0;
+  let bgTransitionAt = 0;
+
+  function backgroundIndexForScore(score) {
+    const value = Math.max(0, score);
+    let index = 0;
+    while (index + 1 < BG_SCORE_THRESHOLDS.length && value >= BG_SCORE_THRESHOLDS[index + 1]) index++;
+    return clamp(index, 0, SEASON_BACKGROUNDS.length - 1);
+  }
+
+  // 按原图比例绘制；窄屏多出的上下空间由天空边缘和近景石地延展填满。
+  function drawSeasonImage(image) {
+    if (!image || !image.complete || !image.naturalWidth) return false;
+
+    const iw = image.naturalWidth;
+    const ih = image.naturalHeight;
+    const scale = Math.min(W / iw, H / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    const dx = (W - dw) * 0.5;
+    const dy = (H - dh) * 0.5;
+
+    if (dy > 0.5) {
+      const edgeH = Math.max(1, Math.round(ih * 0.08));
+      ctx.drawImage(image, 0, 0, iw, edgeH, 0, 0, W, dy);
+      ctx.drawImage(image, 0, ih - edgeH, iw, edgeH, 0, dy + dh, W, H - dy - dh);
+    }
+    if (dx > 0.5) {
+      const edgeW = Math.max(1, Math.round(iw * 0.06));
+      ctx.drawImage(image, 0, 0, edgeW, ih, 0, 0, dx, H);
+      ctx.drawImage(image, iw - edgeW, 0, edgeW, ih, dx + dw, 0, W - dx - dw, H);
+    }
+
+    ctx.drawImage(image, 0, 0, iw, ih, dx, dy, dw, dh);
+    return true;
+  }
+
+  function drawSeasonalBackground(t) {
+    const wanted = backgroundIndexForScore(G.score);
+    if (wanted !== activeBgIndex) {
+      previousBgIndex = activeBgIndex;
+      activeBgIndex = wanted;
+      bgTransitionAt = t;
+    }
+
+    const current = seasonImages[activeBgIndex];
+    if (!current || !current.complete || !current.naturalWidth) return false;
+
+    ctx.fillStyle = PAL.ink;
+    ctx.fillRect(0, 0, W, H);
+    const blend = bgTransitionAt ? clamp((t - bgTransitionAt) / BG_FADE_SECONDS, 0, 1) : 1;
+    const previous = seasonImages[previousBgIndex];
+
+    if (blend < 1 && previous && previous.complete && previous.naturalWidth) {
+      ctx.save();
+      ctx.globalAlpha = 1 - blend;
+      drawSeasonImage(previous);
+      ctx.restore();
+    }
+    ctx.save();
+    ctx.globalAlpha = blend;
+    drawSeasonImage(current);
+    ctx.restore();
+    return true;
+  }
+
   function waveConfig(n) {
     const lap = Math.max(1.70, 2.50 - n * 0.045);
     let count = 1;
@@ -828,9 +932,11 @@
      绘制（美术像素坐标）
      ========================================================= */
   function render(t, dt) {
-    drawSky(t);
-    drawGround();
-    if (sceneryCanvas) ctx.drawImage(sceneryCanvas, 0, 0);
+    if (!drawSeasonalBackground(t)) {
+      drawSky(t);
+      drawGround();
+      if (sceneryCanvas) ctx.drawImage(sceneryCanvas, 0, 0);
+    }
     drawPath();
     drawHall(t);
     drawWall(t);
@@ -1271,7 +1377,8 @@
     const sw = BOX.w;
     const pad = Math.round(sw * 0.055);
     const x0 = BOX.x + pad;
-    const y0 = BOX.y + pad * 0.85;
+    const safeTop = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-top')) || 0;
+    const y0 = BOX.y + Math.max(pad * 0.85, safeTop + 8);
 
     octx.textAlign = 'left';
     octx.textBaseline = 'top';
@@ -1479,7 +1586,8 @@
     startGame();
   });
 
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', resize, { passive: true });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', resize, { passive: true });
   window.addEventListener('orientationchange', () => setTimeout(resize, 260));
 
   /* =========================================================
@@ -1493,5 +1601,5 @@
 
 })();
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a60f92855fee25ef',t:'MTc5NTc2NjE0NA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a60f92855fee25ef',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

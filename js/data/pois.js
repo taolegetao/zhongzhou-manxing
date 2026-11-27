@@ -103,6 +103,11 @@ export const POIS = [
     hitbox: { x: 380, y: 1140, width: 280, height: 196 },
     aura: { x: 512, y: 1330, rx: 135, ry: 24 },
     bubble: { x: 512, y: 1128 },
+    minigame: {
+      href: './yanmen/',
+      label: '走进《验门》',
+      desc: '十二位来客走到门前，你决定谁走哪个门',
+    },
     tags: ['京师正门', '俗称前门', '城楼与箭楼'],
     lead:
       '正阳门是北京内城的正南门，俗称“前门”，位于天安门广场南侧，是北京旧城的重要标志。',

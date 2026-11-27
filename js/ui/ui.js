@@ -1,5 +1,5 @@
-import { ATLAS_BADGES } from '../data/atlas.js?v=1.3.2';
-import { formatSavedAt } from '../core/progress.js?v=1.3.2';
+import { ATLAS_BADGES } from '../data/atlas.js?v=1.6.0';
+import { formatSavedAt } from '../core/progress.js?v=1.6.0';
 
 /**
  * 页面 UI：开始页、HUD、气泡、散页卡、答题、图鉴、设置、Toast。

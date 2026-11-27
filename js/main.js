@@ -1,13 +1,13 @@
-import { HIT_SLOP, PLAYER, VIEW, WORLD } from './config.js?v=1.3.2';
-import { POIS } from './data/pois.js?v=1.5.1';
-import { ATLAS_BADGES } from './data/atlas.js?v=1.3.2';
-import { AssetStore } from './core/assets.js?v=1.3.2';
-import { Camera, clamp } from './core/camera.js?v=1.3.2';
-import { InputController } from './core/input.js?v=1.3.2';
-import { Player } from './core/player.js?v=1.3.2';
-import { formatSavedAt, loadProgress, loadSlots, saveProgress, saveSlot } from './core/progress.js?v=1.3.2';
-import { SceneRenderer } from './render/scene.js?v=1.3.2';
-import { UI } from './ui/ui.js?v=1.3.2';
+import { HIT_SLOP, PLAYER, VIEW, WORLD } from './config.js?v=1.6.0';
+import { POIS } from './data/pois.js?v=1.6.0';
+import { ATLAS_BADGES } from './data/atlas.js?v=1.6.0';
+import { AssetStore } from './core/assets.js?v=1.6.0';
+import { Camera, clamp } from './core/camera.js?v=1.6.0';
+import { InputController } from './core/input.js?v=1.6.0';
+import { Player } from './core/player.js?v=1.6.0';
+import { formatSavedAt, loadProgress, loadSlots, saveProgress, saveSlot } from './core/progress.js?v=1.6.0';
+import { SceneRenderer } from './render/scene.js?v=1.6.0';
+import { UI } from './ui/ui.js?v=1.6.0';
 
 const saved = loadProgress();
 const validBadgeIds = new Set(ATLAS_BADGES.map((badge) => badge.id));
